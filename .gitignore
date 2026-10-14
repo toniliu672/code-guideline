@@ -1,0 +1,17 @@
+# OS & Editor Files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Logs & Temporary Files
+*.log
+tmp/
+scratch/
+
+# Local Project Configuration (Custom overrides)
+scripts/rules/config.env
+.env

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -e
+
+echo "==> [PRE-COMMIT] Running code quality and guidelines audit..."
+
+if [ -f "guidelines.sh" ]; then
+    bash guidelines.sh
+elif [ -f "scripts/guidelines.sh" ]; then
+    bash scripts/guidelines.sh
+else
+    echo "Warning: guidelines.sh not found. Skipping pre-commit audit."
+fi
