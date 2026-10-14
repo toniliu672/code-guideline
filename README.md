@@ -21,9 +21,10 @@ Audits are orchestrated by a single **Master Runner** (`guidelines.sh`) governin
 │ 1. CORE RULES (Universal Multi-Stack)                                  │
 │    - check-comments.sh     : Zero Inline Comments (No // in functions) │
 │    - check-lines.sh        : Max 100 Lines per File (SRP Modularity)   │
+│    - check-syntax-lint.sh  : Syntax & Static Analysis (PHP/Linter)     │
 ├────────────────────────────────────────────────────────────────────────┤
 │ 2. FRONTEND PARADIGMS & DESIGN SYSTEM                                  │
-│    - check-design-system.sh: Global Color Tokens & Anti-Train-Track    │
+│    - check-design-system.sh: Color Tokens, Anti-Train-Track & Conflicts│
 │    - check-blade-components.sh: Component & Layout Architecture (Laravel)│
 │    - check-component-react.sh: Modular Components (React / Next.js)   │
 │    - check-component-svelte.sh: Component Separation (SvelteKit)     │
@@ -186,7 +187,8 @@ guide-rules/
         ├── README.md                # Rules technical documentation
         ├── core/                    # Universal Core Rules
         │   ├── check-comments.sh    # Zero Inline Comments
-        │   └── check-lines.sh       # Maximum 100 Lines per File
+        │   ├── check-lines.sh       # Maximum Lines per File & Layout Tolerance
+        │   └── check-syntax-lint.sh # Syntax Integrity & Static Analysis
         ├── frontend/                # Frontend & Design System Paradigms
         │   ├── check-component-based.sh  (Master Router)
         │   ├── check-design-system.sh    (Global Color Tokens & Anti-Train-Track)
