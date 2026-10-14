@@ -1,6 +1,6 @@
 # Rules Audit Modules & Software Engineering Paradigms
 
-This directory houses modular code quality and architectural compliance audit modules across 4 primary domains: **Core**, **Frontend**, **Architecture**, and **Security**. All modules can be orchestrated and toggled via the Master Runner `guidelines.sh` or through `config.env`.
+This directory houses modular code quality and architectural compliance audit modules across 4 primary domains: **Core**, **Frontend**, **Architecture**, and **Security (ISO Compliance)**. All modules can be orchestrated and toggled via the Master Runner `guidelines.sh` or through `config.env`.
 
 ---
 
@@ -41,12 +41,13 @@ Structural and domain organization standards for backend and system design:
 
 ---
 
-## 4. Security & Data Privacy (`security/`)
+## 4. Security & ISO Standards Compliance (`security/`)
 
-| Script | Security Standard | Inspection Focus |
+Universal software engineering standards based on international benchmarks:
+
+| Script | Standard | 5 Audited Universal Clauses |
 | :--- | :--- | :--- |
-| **`check-security.sh`** | General Security | Prevents storing sensitive files in public disks, ensures sensitive model attributes are hidden (`$hidden`), validates upload MIME types, checks `.env` exposure, and blocks leftover debug calls (`dd`, `dump`). |
-| **`check-iso-security.sh`** | ISO 27001 / 27701 | Executes general security audit plus authorization protection and audit trail checks. |
+| **`check-iso-compliance.sh`** | **ISO/IEC 27001, 27701 & 25010** | **Clause 1 (ISO 27001 A.8.12)**: Data Leakage Prevention (.env & private key isolation).<br>**Clause 2 (ISO 27001 A.8.24)**: Storage Isolation (no confidential files on public disks).<br>**Clause 3 (ISO 27701 Cl.7.4)**: Data Minimization & PII Protection (password & credential masking).<br>**Clause 4 (ISO 27001 A.8.28)**: Secure Coding & Input Sanitization (mandatory file upload MIME validation).<br>**Clause 5 (ISO 25010 Cl.4.3)**: Maintainability & Clean Code (no leftover debug statements in production). |
 
 ---
 

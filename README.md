@@ -6,7 +6,7 @@
 
 A master repository providing automated code quality auditing, architectural compliance, clean code enforcement, and security inspection designed to be **completely universal and multi-stack**.
 
-This repository is not coupled to any single language or framework. It can be easily configured and adopted across **Laravel Blade**, **React / Next.js**, **Svelte / SvelteKit**, and **Flutter**, supporting architectural patterns such as **MVC**, **Modular / Domain-Driven Design**, **Service Layer**, and **Microservices**.
+This repository is not coupled to any single language or framework. It can be easily configured and adopted across **Laravel Blade**, **React / Next.js**, **Svelte / SvelteKit**, and **Flutter**, supporting architectural patterns such as **MVC**, **Modular / Domain-Driven Design**, **Service Layer**, and **Microservices**, as well as international **ISO/IEC software engineering standards**.
 
 ---
 
@@ -35,9 +35,12 @@ Audits are orchestrated by a single **Master Runner** (`guidelines.sh`) governin
 │    - check-service-layer.sh: Thin Controllers & Business Services      │
 │    - check-microservices.sh: Container, Health Probe, Env Isolation   │
 ├────────────────────────────────────────────────────────────────────────┤
-│ 4. SECURITY & DATA PRIVACY (Security Audit)                            │
-│    - check-security.sh     : Private Storage, Hidden Secrets, MIME     │
-│    - check-iso-security.sh : ISO 27001/27701 Audit Trail & Access      │
+│ 4. SECURITY & ISO STANDARDS COMPLIANCE (check-iso-compliance.sh)       │
+│    - Clause 1 (ISO 27001 A.8.12): Data Leakage & Secret Isolation      │
+│    - Clause 2 (ISO 27001 A.8.24): Storage Isolation (No public leaks)  │
+│    - Clause 3 (ISO 27701 Cl.7.4): PII Protection & Data Minimization   │
+│    - Clause 4 (ISO 27001 A.8.28): Input Sanitization (MIME Validation) │
+│    - Clause 5 (ISO 25010 Cl.4.3): Maintainability (No debug calls)     │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -55,6 +58,23 @@ AI coding assistants frequently introduce UI anti-patterns when generating style
    - In page and route files (`page.tsx`, `+page.svelte`, views), AI often dumps 15–30 utility classes into monolithic elements.
    - Any element exceeding the configured threshold (default: > 10 classes or > 100 characters) is flagged as a violation.
    - Requires extracting styling into modular UI components (e.g. Shadcn/UI variants, CVA, or custom components).
+
+---
+
+## International ISO/IEC Software Standards
+
+This repository aligns software development with three recognized ISO/IEC software engineering standards:
+
+1. **ISO/IEC 27001 (Information Security / SSDLC)**:
+   - **Annex A.8.12**: Enforces environment secrets (`.env`, `.pem`, `.key`) are excluded from version control and private keys are never hardcoded.
+   - **Annex A.8.24**: Enforces storage isolation so confidential user uploads cannot be traversed publicly.
+   - **Annex A.8.28**: Enforces binary input sanitization and MIME verification for all uploaded files.
+
+2. **ISO/IEC 27701 (Privacy Information Management / PII Protection)**:
+   - **Clause 7.4**: Enforces *Data Minimization* and *Privacy by Design* by ensuring authentication attributes (passwords, tokens) are hidden in data models.
+
+3. **ISO/IEC 25010 (Software Product Quality / SQuaRE)**:
+   - **Maintainability (Clause 4.3)**: Enforces modularity ($\le 100$ lines per file), clean code (zero dead inline comments), and purges internal debug calls (`dd`, `dump`, `var_dump`) from production code.
 
 ---
 
@@ -103,7 +123,8 @@ The installer automatically:
 1. Copies the `scripts/` directory and root `guidelines.sh` shortcut.
 2. Applies execution permissions (`chmod +x`) to all `.sh` scripts.
 3. Sets up the initial configuration file `scripts/rules/config.env`.
-4. Installs a **Git Pre-Commit Hook** (`.git/hooks/pre-commit`) in the target project, automatically verifying compliance before every commit.
+4. Installs `AGENTS.md` and `CLAUDE.md` in the target project root.
+5. Installs a **Git Pre-Commit Hook** (`.git/hooks/pre-commit`) in the target project, automatically verifying compliance before every commit.
 
 ---
 
@@ -124,7 +145,7 @@ bash guidelines.sh core       # Universal core rules (zero comments & 100 lines)
 bash guidelines.sh frontend   # Frontend components & design system audit
 bash guidelines.sh design     # Design system color tokens & class-soup audit
 bash guidelines.sh arch       # Architecture pattern audit
-bash guidelines.sh security   # Security & data privacy audit
+bash guidelines.sh iso        # ISO 27001, 27701 & 25010 compliance audit
 ```
 
 ### 3. CLI Overrides for Specific Paradigms
@@ -177,9 +198,8 @@ guide-rules/
         │   ├── check-modular.sh          (Modular / Feature-First)
         │   ├── check-service-layer.sh    (Thin Controller + Service)
         │   └── check-microservices.sh    (Container & Health Probe)
-        └── security/                # Security & Privacy Standards
-            ├── check-security.sh
-            └── check-iso-security.sh
+        └── security/                # Universal ISO Compliance
+            └── check-iso-compliance.sh   (ISO 27001, 27701, and 25010)
 ```
 
 ---

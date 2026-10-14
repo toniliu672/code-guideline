@@ -58,8 +58,8 @@ case "$TARGET" in
         export ARCHITECTURE_APPROACH
         run_step "Architecture" "$RULES_DIR/architecture/check-architecture.sh"
         ;;
-    security)
-        run_step "Security" "$RULES_DIR/security/check-security.sh"
+    security|iso)
+        run_step "ISO Compliance" "$RULES_DIR/security/check-iso-compliance.sh"
         ;;
     all)
         [ "$ENABLE_CORE" = "true" ] && {
@@ -75,10 +75,10 @@ case "$TARGET" in
             export ARCHITECTURE_APPROACH
             run_step "Architecture" "$RULES_DIR/architecture/check-architecture.sh"
         }
-        [ "$ENABLE_SECURITY" = "true" ] && run_step "Security" "$RULES_DIR/security/check-security.sh"
+        [ "$ENABLE_SECURITY" = "true" ] && run_step "ISO Compliance" "$RULES_DIR/security/check-iso-compliance.sh"
         ;;
     *)
-        echo -e "${RED}[ERROR]${NC} Unknown module: $TARGET (all | core | frontend | design | arch | security)"
+        echo -e "${RED}[ERROR]${NC} Unknown module: $TARGET (all | core | frontend | design | arch | security | iso)"
         exit 1
         ;;
 esac
