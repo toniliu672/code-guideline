@@ -10,7 +10,7 @@ Universal foundation rules applicable to all programming languages and stacks:
 | Script | Purpose & Rule Enforced |
 | :--- | :--- |
 | **`check-comments.sh`** | Enforces **Zero Inline Comments** inside function bodies and template logic (prevents commented-out dead code and clutter). |
-| **`check-lines.sh`** | Enforces a maximum threshold of **100 Lines per File** (Single Responsibility Principle) on changed files in `git status`. |
+| **`check-lines.sh`** | Enforces **100 Lines per File** on logic/components (Single Responsibility Principle) with smart tolerance (up to 250 lines) for structural layouts, migrations, and configs to avoid over-fragmentation. |
 
 ---
 
@@ -21,7 +21,7 @@ Component-based modular architecture and design system compliance checks:
 | :--- | :--- | :--- |
 | **`check-component-based.sh`** | Master Router | Automatically detects or routes frontend audits according to the configured approach. |
 | **`check-design-system.sh`**   | Design System & Styling | **Global Color Tokens & Anti-Train-Track**: Enforces colors defined globally (`app.css`/`globals.css`), flags arbitrary color utilities (`bg-[#...]`, `text-[#...]`), and blocks long monolithic class-soup strings in page files. |
-| **`check-atomic-blade.sh`**     | Laravel Blade | Enforces **Atomic Design** (`atoms`, `molecules`, `organisms`) and forbids raw HTML elements (`<form>`, `<input>`, `<button>`) outside atoms. |
+| **`check-blade-components.sh`** | Laravel Blade | Enforces **Component-Based & Layout Architecture** (`standard` folder-based with admin separation or strict `atomic`). Page views compose `<x-...>` components. |
 | **`check-component-react.sh`**  | React / Next.js | Enforces separation between page routes (`app/` or `pages/`) and reusable modular components in `components/`. |
 | **`check-component-svelte.sh`** | Svelte / SvelteKit | Enforces separation between route files (`+page.svelte`) and component modules in `$lib/components/`. |
 | **`check-component-flutter.sh`**| Flutter | Enforces extracting custom widgets to `lib/widgets/` to avoid massive monolithic widget pyramids in screens/pages. |
@@ -67,4 +67,13 @@ CHECK_COLOR_TOKENS=true
 CHECK_TRAIN_TRACK=true
 MAX_CLASS_CHARS=100
 MAX_CLASS_WORDS=10
+```
+
+Configuration example for **Laravel Blade (Components & Layouts)**:
+```bash
+FRONTEND_APPROACH="blade"
+BLADE_APPROACH="standard"
+ARCHITECTURE_APPROACH="mvc"
+CHECK_COLOR_TOKENS=true
+CHECK_TRAIN_TRACK=true
 ```

@@ -36,7 +36,7 @@ if [ "$CHECK_TRAIN_TRACK" = "true" ]; then
     PAGE_FILES=()
     while IFS= read -r p; do
         [[ -n "$p" ]] && PAGE_FILES+=("$p")
-    done < <(find . -type f 2>/dev/null | grep -E "(app/.*/page\.(tsx|jsx|js)|pages/.*\.(tsx|jsx|js)|src/routes/.*\+page\.svelte|resources/views/.*\.blade\.php)" | grep -v "resources/views/components" | grep -vE "($EXCLUDE)" || true)
+    done < <(find . -type f 2>/dev/null | grep -E "(app/.*/page\.(tsx|jsx|js)|pages/.*\.(tsx|jsx|js)|src/routes/.*\+page\.svelte|resources/views/.*\.blade\.php)" | grep -vE "resources/views/(components|layouts|layout)" | grep -vE "($EXCLUDE)" || true)
 
     for page in "${PAGE_FILES[@]}"; do
         [ ! -f "$page" ] && continue

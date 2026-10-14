@@ -5,9 +5,11 @@ RULES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 [ -f "$RULES_DIR/config.env" ] && source "$RULES_DIR/config.env"
 
 MAX_LINES="${MAX_LINES:-100}"
+MAX_LAYOUT_LINES="${MAX_LAYOUT_LINES:-250}"
 STRICT_LINES="${STRICT_LINES:-false}"
 EXTENSIONS="php|blade\.php|js|jsx|ts|tsx|svelte|dart|py|sh"
 EXCLUDE="vendor|node_modules|storage|\.git|\.next|\.svelte-kit|dist|build|\.dart_tool"
+LINE_EXCLUDES="${LINE_EXCLUDES:-database/migrations|database/seeders|config/}"
 
 ERRORS=0
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; NC='\033[0m'
@@ -18,7 +20,7 @@ for arg in "$@"; do
     [ "$arg" == "--strict" ] && STRICT_LINES=true
 done
 
-echo "==> [CORE] Enforcing Maximum $MAX_LINES Lines per File Limit..."
+echo "==> [CORE] Enforcing Lines Limit (Max $MAX_LINES lines for logic, $MAX_LAYOUT_LINES for layouts)..."
 TARGET_FILES=()
 
 if [ "$CHECK_ALL" = true ]; then
@@ -37,12 +39,18 @@ if [ ${#TARGET_FILES[@]} -eq 0 ]; then
 fi
 
 for file in "${TARGET_FILES[@]}"; do
-    if [ -f "$file" ]; then
-        lines=$(wc -l < "$file")
-        if [ "$lines" -gt "$MAX_LINES" ]; then
-            echo -e "${YELLOW}[WARNING]${NC} $file exceeds $MAX_LINES lines limit ($lines lines)."
-            ERRORS=$((ERRORS + 1))
-        fi
+    [ ! -f "$file" ] && continue
+    if [[ -n "$LINE_EXCLUDES" ]] && [[ "$file" =~ $LINE_EXCLUDES ]]; then
+        continue
+    fi
+    lines=$(wc -l < "$file")
+    limit="$MAX_LINES"
+    if [[ "$file" =~ (layouts/|layout/|layout\.(tsx|jsx|js|blade\.php)|\+layout\.svelte) ]]; then
+        limit="$MAX_LAYOUT_LINES"
+    fi
+    if [ "$lines" -gt "$limit" ]; then
+        echo -e "${YELLOW}[WARNING]${NC} $file exceeds $limit lines limit ($lines lines)."
+        ERRORS=$((ERRORS + 1))
     fi
 done
 

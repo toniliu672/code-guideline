@@ -6,15 +6,16 @@ RULES_DIR="$SCRIPT_DIR/rules"
 [ -f "$RULES_DIR/config.env" ] && source "$RULES_DIR/config.env"
 
 # MASTER RULES CONFIGURATION (Configure here or via config.env)
-ENABLE_CORE="${ENABLE_CORE:-true}"                     # true | false
-FRONTEND_APPROACH="${FRONTEND_APPROACH:-auto}"         # auto | blade | react | next | svelte | flutter | none
-ARCHITECTURE_APPROACH="${ARCHITECTURE_APPROACH:-auto}" # auto | mvc | modular | service-layer | microservices | none
-ENABLE_SECURITY="${ENABLE_SECURITY:-true}"             # true | false
+ENABLE_CORE="${ENABLE_CORE:-true}"
+FRONTEND_APPROACH="${FRONTEND_APPROACH:-auto}"
+BLADE_APPROACH="${BLADE_APPROACH:-standard}"
+ARCHITECTURE_APPROACH="${ARCHITECTURE_APPROACH:-auto}"
+ENABLE_SECURITY="${ENABLE_SECURITY:-true}"
 
-# Parse CLI Overrides (e.g. --frontend=flutter --arch=modular)
 for arg in "$@"; do
     case "$arg" in
         --frontend=*) FRONTEND_APPROACH="${arg#*=}" ;;
+        --blade=*) BLADE_APPROACH="${arg#*=}" ;;
         --arch=*) ARCHITECTURE_APPROACH="${arg#*=}" ;;
         --no-core) ENABLE_CORE=false ;;
         --no-security) ENABLE_SECURITY=false ;;
@@ -47,7 +48,7 @@ case "$TARGET" in
         run_step "Lines Limit" "$RULES_DIR/core/check-lines.sh"
         ;;
     frontend|ui)
-        export FRONTEND_APPROACH
+        export FRONTEND_APPROACH BLADE_APPROACH
         run_step "Frontend" "$RULES_DIR/frontend/check-component-based.sh"
         run_step "Design System" "$RULES_DIR/frontend/check-design-system.sh"
         ;;
@@ -67,7 +68,7 @@ case "$TARGET" in
             run_step "Lines Limit" "$RULES_DIR/core/check-lines.sh"
         }
         [ "$FRONTEND_APPROACH" != "none" ] && {
-            export FRONTEND_APPROACH
+            export FRONTEND_APPROACH BLADE_APPROACH
             run_step "Frontend" "$RULES_DIR/frontend/check-component-based.sh"
             run_step "Design System" "$RULES_DIR/frontend/check-design-system.sh"
         }

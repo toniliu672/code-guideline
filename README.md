@@ -24,7 +24,7 @@ Audits are orchestrated by a single **Master Runner** (`guidelines.sh`) governin
 ├────────────────────────────────────────────────────────────────────────┤
 │ 2. FRONTEND PARADIGMS & DESIGN SYSTEM                                  │
 │    - check-design-system.sh: Global Color Tokens & Anti-Train-Track    │
-│    - check-atomic-blade.sh : Strict Atomic Components (Laravel)       │
+│    - check-blade-components.sh: Component & Layout Architecture (Laravel)│
 │    - check-component-react.sh: Modular Components (React / Next.js)   │
 │    - check-component-svelte.sh: Component Separation (SvelteKit)     │
 │    - check-component-flutter.sh: Custom Widget Separation (Flutter)   │
@@ -88,6 +88,8 @@ ENABLE_CORE=true
 
 # Frontend Paradigm: auto | blade | react | next | svelte | flutter | none
 FRONTEND_APPROACH="auto"
+# Blade Approach: standard (components/admin/, components/, layouts/) | atomic
+BLADE_APPROACH="standard"
 
 # Design System & Styling Rules
 CHECK_COLOR_TOKENS=true
@@ -188,7 +190,8 @@ guide-rules/
         ├── frontend/                # Frontend & Design System Paradigms
         │   ├── check-component-based.sh  (Master Router)
         │   ├── check-design-system.sh    (Global Color Tokens & Anti-Train-Track)
-        │   ├── check-atomic-blade.sh     (Laravel Blade)
+        │   ├── check-blade-components.sh (Laravel Blade: Standard & Atomic)
+        │   ├── check-atomic-blade.sh     (Legacy wrapper)
         │   ├── check-component-react.sh  (React / Next.js)
         │   ├── check-component-svelte.sh (Svelte / SvelteKit)
         │   └── check-component-flutter.sh (Flutter)

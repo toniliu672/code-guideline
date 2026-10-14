@@ -24,7 +24,7 @@ fi
 
 case "$FRONTEND_APPROACH" in
     blade)
-        bash "$SCRIPT_DIR/check-atomic-blade.sh" "$@"
+        bash "$SCRIPT_DIR/check-blade-components.sh" "$@"
         ;;
     react|next)
         bash "$SCRIPT_DIR/check-component-react.sh" "$@"
