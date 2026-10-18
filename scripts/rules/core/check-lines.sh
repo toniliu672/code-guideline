@@ -50,6 +50,7 @@ for file in "${TARGET_FILES[@]}"; do
     fi
     if [ "$lines" -gt "$limit" ]; then
         echo -e "${YELLOW}[WARNING]${NC} $file exceeds $limit lines limit ($lines lines)."
+        echo -e "${YELLOW}[FIX]${NC}     Split into smaller components (<x-...>) or dedicated Service/Action classes."
         ERRORS=$((ERRORS + 1))
     fi
 done

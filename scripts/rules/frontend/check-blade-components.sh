@@ -7,8 +7,8 @@ RULES_DIR="$SCRIPT_DIR/.."
 
 VIEWS_DIR="${VIEWS_DIR:-resources/views}"
 BLADE_APPROACH="${BLADE_APPROACH:-standard}"
-ERRORS=0
-CHECKED=0
+MAX_PHP_BLOCK_LINES="${MAX_BLADE_PHP_LINES:-3}"
+ERRORS=0; CHECKED=0
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; BLUE='\033[0;34m'; NC='\033[0m'
 
 if [ ! -d "$VIEWS_DIR" ]; then
@@ -18,6 +18,7 @@ fi
 
 if [ ! -d "$VIEWS_DIR/components" ]; then
     echo -e "${RED}[FAIL]${NC} '$VIEWS_DIR/components' not found! Blade requires modular component folder."
+    echo -e "${YELLOW}[FIX]${NC}  Create '$VIEWS_DIR/components' and place reusable UI components (<x-...>) inside."
     exit 1
 fi
 
@@ -33,7 +34,6 @@ fi
 
 while IFS= read -r file; do
     [[ -z "$file" ]] && continue
-
     is_exempt=false
     if [ "$BLADE_APPROACH" = "standard" ]; then
         if [[ "$file" =~ $VIEWS_DIR/components/ ]] || [[ "$file" =~ $VIEWS_DIR/layouts/ ]] || [[ "$file" =~ $VIEWS_DIR/layout/ ]]; then
@@ -41,10 +41,7 @@ while IFS= read -r file; do
         fi
     else
         for exempt_dir in "components/atoms" "components/layouts" "atoms"; do
-            if [[ "$file" =~ $exempt_dir ]]; then
-                is_exempt=true
-                break
-            fi
+            [[ "$file" =~ $exempt_dir ]] && { is_exempt=true; break; }
         done
     fi
     [ "$is_exempt" = true ] && continue
@@ -53,21 +50,28 @@ while IFS= read -r file; do
     violating=$(grep -n -E "<($RAW_TAGS)[[:space:]>]" "$file" 2>/dev/null || true)
     if [ -n "$violating" ]; then
         echo -e "${RED}[FAIL]${NC} Raw HTML element found outside components in page: $file"
-        echo -e "       Delegate UI elements to reusable Blade components (e.g. <x-button>, <x-admin.button>, <x-input>)."
         echo "$violating" | head -n 3
+        echo -e "${YELLOW}[FIX]${NC}  Replace raw HTML tags with reusable Blade components (e.g. <x-button>, <x-admin.button>, <x-input>)."
+        ERRORS=$((ERRORS + 1))
+    fi
+
+    php_blocks=$(awk -v max_l="$MAX_PHP_BLOCK_LINES" '
+    /@php/ { in_php=1; start=NR; c=0; next }
+    /@endphp/ { if (in_php && c > max_l) print "Lines " start "-" NR " (" c " lines inside @php...@endphp)"; in_php=0; next }
+    in_php { c++ }
+    ' "$file" 2>/dev/null || true)
+    if [ -n "$php_blocks" ]; then
+        echo -e "${RED}[FAIL]${NC} Verbose @php data/logic block in page view: $file ($php_blocks)"
+        echo -e "${YELLOW}[FIX]${NC}  Move data arrays to Controller/Service, or use compact inline destructuring:"
+        echo -e "       @foreach ([['Label', \$val, 'icon', 'tone-info']] as [\$label, \$val, \$icon, \$tone]) <x-stat-card .../> @endforeach"
         ERRORS=$((ERRORS + 1))
     fi
 done < <(find "$VIEWS_DIR" -type f -name "*.blade.php" -not -path "*/vendor/*" -not -path "*/node_modules/*" 2>/dev/null || true)
 
-if [ "$CHECKED" -eq 0 ]; then
-    echo -e "${YELLOW}[INFO]${NC} No Blade page views found to audit in $VIEWS_DIR."
-    exit 0
-fi
-
+[ "$CHECKED" -eq 0 ] && { echo -e "${YELLOW}[INFO]${NC} No Blade page views found to audit in $VIEWS_DIR."; exit 0; }
 if [ "$ERRORS" -eq 0 ]; then
     echo -e "${GREEN}[OK]${NC} All $CHECKED Blade page(s) strictly adhere to $BLADE_APPROACH Component & Layout Architecture."
     exit 0
-else
-    echo -e "${RED}[ERROR]${NC} Found $ERRORS Blade view(s) containing forbidden raw HTML elements!"
-    exit 1
 fi
+echo -e "${RED}[ERROR]${NC} Found $ERRORS Blade view violation(s)!"
+exit 1

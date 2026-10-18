@@ -32,6 +32,7 @@ while IFS= read -r file; do
     if [ -n "$violating" ]; then
         echo -e "${RED}[FAIL]${NC} Forbidden inline comment found in: $file"
         echo "$violating" | head -n 3
+        echo -e "${YELLOW}[FIX]${NC}  Remove inline comments (//, <!--, {{-- ) and use descriptive variable/function names instead."
         ERRORS=$((ERRORS + 1))
     fi
 done < <(find "${EXISTING_DIRS[@]}" -type f 2>/dev/null | grep -E "\.($EXTENSIONS)$" | grep -vE "($EXCLUDE_DIRS)" || true)

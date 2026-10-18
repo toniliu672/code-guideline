@@ -17,12 +17,12 @@ All checks must pass 100% before concluding your turn.
 - **Syntax & Type Safety**: Code must be free of syntax errors and static analysis type violations. In PHP/Laravel, pass exception class strings (e.g. `throw_if($cond, CustomException::class, 'message')`) instead of instantiating `new Exception()` to prevent PHP0406 diagnostic errors.
 
 ## 3. Frontend & Design System Standards
-- **Global Color Tokens Only**: Never use arbitrary hardcoded colors (e.g. `bg-[#1a2b3c]`, `text-[#ff0000]`, inline styles). Use global design tokens / CSS variables in `globals.css` or `app.css`.
+- **Global Color Tokens Only**: Never use arbitrary hardcoded colors (e.g. `bg-[#1a2b3c]`, inline styles) or raw Tailwind color palettes (e.g. `text-zinc-900`, `bg-slate-800`, `text-white`, `bg-black`). Use semantic design tokens / CSS variables defined globally in `globals.css` or `app.css` (e.g. `text-foreground`, `bg-background`, `text-primary`).
 - **Anti-Train-Track Classes**: Do not write 10+ utility classes or 100+ character class strings directly inside page files (`page.tsx`, `+page.svelte`, views). Extract styling into reusable modular components.
 - **No Class Conflicts**: Avoid mutually exclusive utility classes on the same element (e.g. `hidden flex`, `text-left text-right`).
 - **Canonical Tailwind Classes**: Always prefer standard Tailwind scale utilities over arbitrary pixel values when a canonical class exists (e.g. use `h-80` instead of `h-[320px]`, `p-4` instead of `p-[16px]`, `w-full` instead of `w-[100%]`).
 - **Component-Based Modularity**: Keep pages clean and declarative; delegate UI styling to modular components.
-  - **Laravel Blade**: Place reusable UI components in `resources/views/components/` (e.g., `components/admin/` for admin UI and `components/` for shared UI) and use layout-based templates in `resources/views/layouts/`. Page views must compose `<x-...>` component tags and extend layouts rather than writing repetitive raw HTML controls.
+  - **Laravel Blade**: Place reusable UI components in `resources/views/components/` (e.g., `components/admin/` for admin UI and `components/` for shared UI) and use layout-based templates in `resources/views/layouts/`. Page views must compose `<x-...>` component tags, extend layouts, and never declare verbose `@php` data arrays (pass data from Controllers or use compact inline `@foreach ([['Label', $val]] as [$label, $val])`).
 
 ## 4. Architecture Standards
 - Respect the architecture pattern configured in `scripts/rules/config.env` (MVC, Modular, Service Layer, or Microservices).

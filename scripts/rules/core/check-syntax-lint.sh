@@ -37,8 +37,8 @@ for f in "${PHP_FILES[@]}"; do
     bad_throw=$(grep -nE "throw_(if|unless)[[:space:]]*\([^,]+,[[:space:]]*new[[:space:]]+[A-Za-z0-9_\\\\]*Exception" "$f" 2>/dev/null || true)
     if [ -n "$bad_throw" ]; then
         echo -e "${RED}[FAIL]${NC} Type-unsafe throw_if/throw_unless with 'new Exception()' in: $f"
-        echo -e "       Use class-string instead: throw_if(\$condition, Exception::class, 'message')"
         echo "$bad_throw" | head -n 2
+        echo -e "${YELLOW}[FIX]${NC}  Pass class-string instead: throw_if(\$condition, CustomException::class, 'message')"
         ERRORS=$((ERRORS + 1))
     fi
 done
