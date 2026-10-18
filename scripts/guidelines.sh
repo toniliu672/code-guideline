@@ -12,6 +12,7 @@ ENABLE_SECURITY="${ENABLE_SECURITY:-true}"
 
 for arg in "$@"; do
     case "$arg" in
+        --update|--global|--clean=*) exec bash "$SCRIPT_DIR/install.sh" "$@" ;;
         --frontend=*) FRONTEND_APPROACH="${arg#*=}" ;;
         --blade=*) BLADE_APPROACH="${arg#*=}" ;;
         --arch=*) ARCHITECTURE_APPROACH="${arg#*=}" ;;

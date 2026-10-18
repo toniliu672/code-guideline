@@ -63,7 +63,7 @@ while IFS= read -r file; do
     if [ -n "$php_blocks" ]; then
         echo -e "${RED}[FAIL]${NC} Verbose @php data/logic block in page view: $file ($php_blocks)"
         echo -e "${YELLOW}[FIX]${NC}  Move data arrays to Controller/Service, or use compact inline destructuring:"
-        echo -e "       @foreach ([['Label', \$val, 'icon', 'tone-info']] as [\$label, \$val, \$icon, \$tone]) <x-stat-card .../> @endforeach"
+        echo -e "       @foreach ([['Label', \$val, 'icon', 'primary']] as [\$label, \$val, \$icon, \$variant]) <x-stat-card .../> @endforeach"
         ERRORS=$((ERRORS + 1))
     fi
 done < <(find "$VIEWS_DIR" -type f -name "*.blade.php" -not -path "*/vendor/*" -not -path "*/node_modules/*" 2>/dev/null || true)

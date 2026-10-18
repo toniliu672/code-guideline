@@ -6,7 +6,7 @@ RULES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 MAX_LINES="${MAX_LINES:-100}"
 MAX_LAYOUT_LINES="${MAX_LAYOUT_LINES:-250}"
-STRICT_LINES="${STRICT_LINES:-false}"
+STRICT_LINES="${STRICT_LINES:-true}"
 EXTENSIONS="php|blade\.php|js|jsx|ts|tsx|svelte|dart|py|sh"
 EXCLUDE="vendor|node_modules|storage|\.git|\.next|\.svelte-kit|dist|build|\.dart_tool"
 LINE_EXCLUDES="${LINE_EXCLUDES:-database/migrations|database/seeders|config/}"

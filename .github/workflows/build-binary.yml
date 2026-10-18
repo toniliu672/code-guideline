@@ -1,0 +1,32 @@
+name: Build Encrypted Guidelines Binary
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'scripts/**'
+      - 'templates/**'
+
+permissions:
+  contents: write
+
+jobs:
+  build-binary:
+    runs-only-on-changes: true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Compile encrypted ELF binary (bin/guidelines)
+        run: bash scripts/build.sh
+
+      - name: Commit updated binary if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add bin/guidelines
+          if ! git diff --staged --quiet; then
+            git commit -m "build(bin): recompile encrypted guidelines binary [skip ci]"
+            git push
+          fi

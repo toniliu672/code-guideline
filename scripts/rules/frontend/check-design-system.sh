@@ -10,21 +10,20 @@ CHECK_CLASS_CONFLICTS="${CHECK_CLASS_CONFLICTS:-true}"; CHECK_CANONICAL="${CHECK
 ERRORS=0; RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; NC='\033[0m'
 
 echo "==> [FRONTEND-DESIGN] Enforcing Global Tokens, Clean Classes & Tailwind Lint..."
-EXCLUDE="vendor|node_modules|storage|\.git|\.next|\.svelte-kit|dist|build"
-EXTS="tsx|jsx|js|svelte|blade\.php|vue|html"
-
-PALETTES="slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose"
-PREFIXES="bg|text|border|ring|fill|stroke|accent|from|to|via|divide|outline|decoration|placeholder"
-COLOR_REGEX="($PREFIXES)-\[(#|rgb|hsl)|($PREFIXES)-($PALETTES)-[0-9]{2,3}|($PREFIXES)-(white|black)([[:space:]\"'\`}/]|$)|style=[\"'][^\"']*(color|background(-color)?):[[:space:]]*(#|rgb|hsl)"
+EXCLUDE="vendor|node_modules|storage|\.git|\.next|\.svelte-kit|dist|build"; EXTS="tsx|jsx|js|svelte|blade\.php|vue|html"
+SHADES="50|100|200|300|400|500|600|700|800|900|950"; PREFIXES="bg|text|border|ring|fill|stroke|accent|from|to|via|divide|outline|decoration|placeholder"
+FAKE_TOKENS="tone|pri|indi|mystic|royal|ruby|mint|aqua|leaf|warmth|warm|neut|err|alert|notice|valid|magenta|soft|mono|ink"
+ALLOWED_CSS_TOKENS="background|foreground|surface(-(muted|elevated|alt))?|card(-foreground)?|popover(-foreground)?|primary(-(foreground|soft|hover))?|secondary(-(foreground|soft))?|muted(-foreground)?|accent(-(foreground|soft))?|(success|warning|danger|destructive|info)(-(foreground|soft))?|border(-(subtle|strong))?|input|ring"
+COLOR_REGEX="($PREFIXES)-\[(#|rgb|hsl)|($PREFIXES)-[a-zA-Z0-9_-]+-($SHADES)([[:space:]\"'\`}/]|$)|($PREFIXES)-($FAKE_TOKENS)(-[a-zA-Z0-9_-]+)?([[:space:]\"'\`}/]|$)|dark:($PREFIXES)-[a-zA-Z0-9_-]+|($PREFIXES)-(white|black)([[:space:]\"'\`}/]|$)|(text|fill|stroke)-(card|background|surface)([[:space:]\"'\`}/]|$)|bg-foreground([[:space:]\"'\`}/]|$)|style=[\"'][^\"']*(color|background(-color)?):[[:space:]]*(#|rgb|hsl)"
 
 while IFS= read -r f; do
     [[ -z "$f" ]] && continue
     if [ "$CHECK_COLORS" = "true" ]; then
-        violating=$(grep -nE "$COLOR_REGEX" "$f" 2>/dev/null || true)
+        violating=$(grep -nE -- "$COLOR_REGEX" "$f" 2>/dev/null || true)
         if [ -n "$violating" ]; then
-            echo -e "${RED}[FAIL]${NC} Hardcoded/palette color found in: $f"
+            echo -e "${RED}[FAIL]${NC} Non-canonical color token, shade, or dark: utility in: $f"
             echo "$violating" | head -n 2
-            echo -e "${YELLOW}[FIX]${NC}  Define semantic tokens in app.css/globals.css (e.g. .tone-info, text-foreground, bg-card) and remove raw palette/dark: color classes."
+            echo -e "${YELLOW}[FIX]${NC}  Use ONLY canonical role tokens: background, foreground, surface, card, primary, secondary, muted, accent, success, warning, danger, info, border (with optional -foreground or -soft). No shades (-50..-950), no dark:text-*, no fake aliases (tone, pri, indi)."
             ERRORS=$((ERRORS + 1))
         fi
     fi
@@ -61,7 +60,21 @@ while IFS= read -r f; do
             ERRORS=$((ERRORS + 1))
         fi
     fi
-done < <(find . -type f 2>/dev/null | grep -E "\.($EXTS)$" | grep -vE "($EXCLUDE|app\.css|globals\.css|tailwind\.config)" || true)
+done < <(find . -type f 2>/dev/null | grep -E "\.($EXTS)$" | grep -vE "($EXCLUDE|tailwind\.config)" || true)
+
+if [ "$CHECK_COLORS" = "true" ]; then
+    while IFS= read -r cf; do
+        [[ -z "$cf" ]] && continue
+        css_viol=$(grep -noE -- "--color-[a-zA-Z0-9_-]+[[:space:]]*:" "$cf" 2>/dev/null | grep -vE -- "--color-($ALLOWED_CSS_TOKENS)[[:space:]]*:" || true)
+        [ -z "$css_viol" ] && css_viol=$(grep -nE -- "@apply [^;]*(($PREFIXES)-[a-zA-Z0-9_-]+-($SHADES)|dark:($PREFIXES)-|($PREFIXES)-(white|black|$FAKE_TOKENS)|(text|fill|stroke)-(card|background|surface))" "$cf" 2>/dev/null || true)
+        if [ -n "$css_viol" ]; then
+            echo -e "${RED}[FAIL]${NC} Non-canonical @theme token or @apply shade in CSS: $cf"
+            echo "$css_viol" | head -n 2
+            echo -e "${YELLOW}[FIX]${NC}  In @theme, ONLY define canonical tokens (--color-background, --color-foreground, --color-surface, --color-card, --color-primary, --color-secondary, --color-muted, --color-accent, --color-success, --color-warning, --color-danger, --color-info, --color-border)."
+            ERRORS=$((ERRORS + 1))
+        fi
+    done < <(find . -type f 2>/dev/null | grep -E "\.css$" | grep -vE "($EXCLUDE)" || true)
+fi
 
 if [ "$CHECK_TRAIN_TRACK" = "true" ]; then
     while IFS= read -r page; do
