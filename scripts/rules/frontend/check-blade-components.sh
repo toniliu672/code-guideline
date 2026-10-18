@@ -6,7 +6,8 @@ RULES_DIR="$SCRIPT_DIR/.."
 [ -f "$RULES_DIR/config.env" ] && source "$RULES_DIR/config.env"
 
 VIEWS_DIR="${VIEWS_DIR:-resources/views}"
-BLADE_APPROACH="${BLADE_APPROACH:-standard}"
+BLADE_APPROACH="${BLADE_APPROACH:-auto}"
+STRICTNESS_LEVEL="${STRICTNESS_LEVEL:-standard}"
 MAX_PHP_BLOCK_LINES="${MAX_BLADE_PHP_LINES:-3}"
 ERRORS=0; CHECKED=0
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; BLUE='\033[0;34m'; NC='\033[0m'
@@ -22,20 +23,31 @@ if [ ! -d "$VIEWS_DIR/components" ]; then
     exit 1
 fi
 
-if [ "$BLADE_APPROACH" = "standard" ]; then
-    echo "==> [FRONTEND-BLADE] Auditing Standard Component & Layout Architecture..."
-    RAW_TAGS="${BLADE_RAW_TAGS:-input|select|textarea|button}"
-    [ -d "$VIEWS_DIR/components/admin" ] && echo -e "${BLUE}[INFO]${NC} Admin component separation detected: $VIEWS_DIR/components/admin"
-    [ -d "$VIEWS_DIR/layouts" ] || [ -d "$VIEWS_DIR/layout" ] && echo -e "${BLUE}[INFO]${NC} Layout-based architecture detected: $VIEWS_DIR/layouts"
-else
-    echo "==> [FRONTEND-BLADE] Auditing Strict Atomic Blade Architecture..."
-    RAW_TAGS="${BLADE_RAW_TAGS:-form|input|button|select|textarea}"
+if [ "$BLADE_APPROACH" = "auto" ]; then
+    if [ -d "$VIEWS_DIR/components/atoms" ]; then BLADE_APPROACH="atomic"
+    elif [ -d "$VIEWS_DIR/components/admin" ]; then BLADE_APPROACH="admin-separated"
+    else BLADE_APPROACH="standard"; fi
 fi
+
+if [ "$BLADE_APPROACH" = "admin-separated" ] && [ ! -d "$VIEWS_DIR/components/admin" ]; then
+    echo -e "${RED}[FAIL]${NC} '$VIEWS_DIR/components/admin' required for admin-separated architecture!"
+    echo -e "${YELLOW}[FIX]${NC}  Create '$VIEWS_DIR/components/admin' for admin UI and '$VIEWS_DIR/components' for shared UI."
+    exit 1
+fi
+
+case "$STRICTNESS_LEVEL" in
+    strict)   DEFAULT_TAGS="input|select|textarea|button|form|table|thead|tbody|tr|td|th|svg|img|p|span|h[1-6]|ul|li|a" ;;
+    moderate) DEFAULT_TAGS="input|select|textarea|button|form|table|thead|tbody|tr|td|th|svg" ;;
+    *)        DEFAULT_TAGS="input|select|textarea|button" ;;
+esac
+[ "$BLADE_APPROACH" = "atomic" ] && [ "$STRICTNESS_LEVEL" = "standard" ] && DEFAULT_TAGS="form|input|button|select|textarea"
+RAW_TAGS="${BLADE_RAW_TAGS:-$DEFAULT_TAGS}"
+echo "==> [FRONTEND-BLADE] Auditing Blade ($BLADE_APPROACH | Level: $STRICTNESS_LEVEL)..."
 
 while IFS= read -r file; do
     [[ -z "$file" ]] && continue
     is_exempt=false
-    if [ "$BLADE_APPROACH" = "standard" ]; then
+    if [ "$BLADE_APPROACH" != "atomic" ]; then
         if [[ "$file" =~ $VIEWS_DIR/components/ ]] || [[ "$file" =~ $VIEWS_DIR/layouts/ ]] || [[ "$file" =~ $VIEWS_DIR/layout/ ]]; then
             is_exempt=true
         fi

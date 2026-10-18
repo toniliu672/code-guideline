@@ -7,10 +7,26 @@ RULES_DIR="$SCRIPT_DIR/.."
 
 CHECK_SYNTAX="${CHECK_SYNTAX:-true}"
 CHECK_STATIC_ANALYSIS="${CHECK_STATIC_ANALYSIS:-true}"
+LINTER_TOOL="${LINTER_TOOL:-auto}"
+[ "$LINTER_TOOL" = "none" ] && { echo "==> [CORE-LINT] Linter disabled (none). Skipping."; exit 0; }
+[ "$LINTER_TOOL" = "syntax-only" ] && CHECK_STATIC_ANALYSIS="false"
 ERRORS=0
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; BLUE='\033[0;34m'; NC='\033[0m'
 
-echo "==> [CORE-LINT] Enforcing Syntax Integrity & Static Analysis..."
+echo "==> [CORE-LINT] Enforcing Syntax Integrity & Static Analysis (Mode: $LINTER_TOOL)..."
+
+if [[ "$LINTER_TOOL" =~ ^(auto|js-ts|svelte)$ ]] && [ "$CHECK_STATIC_ANALYSIS" = "true" ] && [ -f "package.json" ]; then
+    if [ -x "node_modules/.bin/svelte-check" ] && [[ "$LINTER_TOOL" =~ ^(auto|svelte)$ ]]; then
+        node_modules/.bin/svelte-check --threshold error || ERRORS=$((ERRORS + 1))
+    fi
+    if [ -x "node_modules/.bin/eslint" ] && [[ "$LINTER_TOOL" =~ ^(auto|js-ts|svelte)$ ]]; then
+        node_modules/.bin/eslint . --quiet || ERRORS=$((ERRORS + 1))
+    fi
+fi
+
+if [[ "$LINTER_TOOL" =~ ^(auto|flutter)$ ]] && [ "$CHECK_STATIC_ANALYSIS" = "true" ] && [ -f "pubspec.yaml" ] && command -v dart >/dev/null 2>&1; then
+    dart analyze --fatal-infos || ERRORS=$((ERRORS + 1))
+fi
 
 EXCLUDE="vendor|node_modules|storage|\.git"
 PHP_FILES=()
@@ -19,8 +35,8 @@ while IFS= read -r f; do
 done < <(find . -type f -name "*.php" 2>/dev/null | grep -vE "($EXCLUDE)" || true)
 
 if [ ${#PHP_FILES[@]} -eq 0 ]; then
-    echo -e "${YELLOW}[INFO]${NC} No PHP source files found. Skipping PHP syntax/lint audit."
-    exit 0
+    [ "$ERRORS" -eq 0 ] && { echo -e "${GREEN}[OK]${NC} Syntax/lint audit passed."; exit 0; }
+    exit 1
 fi
 
 if [ "$CHECK_SYNTAX" = "true" ] && command -v php >/dev/null 2>&1; then
@@ -43,20 +59,14 @@ for f in "${PHP_FILES[@]}"; do
     fi
 done
 
-if [ "$CHECK_STATIC_ANALYSIS" = "true" ]; then
+if [ "$CHECK_STATIC_ANALYSIS" = "true" ] && [[ "$LINTER_TOOL" =~ ^(auto|php-laravel)$ ]]; then
     if [ -x "vendor/bin/phpstan" ]; then
         echo -e "${BLUE}[INFO]${NC} PHPStan / Larastan detected. Running static analysis..."
-        if ! vendor/bin/phpstan analyse --no-progress 2>&1; then
-            echo -e "${RED}[FAIL]${NC} PHPStan static analysis reported errors!"
-            ERRORS=$((ERRORS + 1))
-        fi
+        vendor/bin/phpstan analyse --no-progress 2>&1 || { echo -e "${RED}[FAIL]${NC} PHPStan reported errors!"; ERRORS=$((ERRORS + 1)); }
     fi
     if [ -x "vendor/bin/pint" ]; then
         echo -e "${BLUE}[INFO]${NC} Laravel Pint detected. Testing code style..."
-        if ! vendor/bin/pint --test 2>&1; then
-            echo -e "${RED}[FAIL]${NC} Laravel Pint found style violations!"
-            ERRORS=$((ERRORS + 1))
-        fi
+        vendor/bin/pint --test 2>&1 || { echo -e "${RED}[FAIL]${NC} Laravel Pint found style violations!"; ERRORS=$((ERRORS + 1)); }
     fi
 fi
 

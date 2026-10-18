@@ -15,3 +15,6 @@ scratch/
 # Local Project Configuration (Custom overrides)
 scripts/rules/config.env
 .env
+
+# Compiled Binaries (Distributed via Releases, not git tree)
+bin/

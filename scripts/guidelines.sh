@@ -7,19 +7,21 @@ RULES_DIR="$SCRIPT_DIR/rules"
 
 # MASTER RULES CONFIGURATION (Configure here or via config.env)
 ENABLE_CORE="${ENABLE_CORE:-true}"; FRONTEND_APPROACH="${FRONTEND_APPROACH:-auto}"
-BLADE_APPROACH="${BLADE_APPROACH:-standard}"; ARCHITECTURE_APPROACH="${ARCHITECTURE_APPROACH:-auto}"
-ENABLE_SECURITY="${ENABLE_SECURITY:-true}"
+BLADE_APPROACH="${BLADE_APPROACH:-auto}"; STRICTNESS_LEVEL="${STRICTNESS_LEVEL:-standard}"
+ARCHITECTURE_APPROACH="${ARCHITECTURE_APPROACH:-auto}"; ENABLE_SECURITY="${ENABLE_SECURITY:-true}"
 
 for arg in "$@"; do
     case "$arg" in
-        --update|--global|--clean=*) exec bash "$SCRIPT_DIR/install.sh" "$@" ;;
+        --setup|--wizard|--update|--global|--clean=*) exec bash "$SCRIPT_DIR/install.sh" "$@" ;;
         --frontend=*) FRONTEND_APPROACH="${arg#*=}" ;;
         --blade=*) BLADE_APPROACH="${arg#*=}" ;;
+        --level=*) STRICTNESS_LEVEL="${arg#*=}" ;;
         --arch=*) ARCHITECTURE_APPROACH="${arg#*=}" ;;
         --no-core) ENABLE_CORE=false ;;
         --no-security) ENABLE_SECURITY=false ;;
     esac
 done
+export FRONTEND_APPROACH BLADE_APPROACH STRICTNESS_LEVEL ARCHITECTURE_APPROACH
 
 PROJECT_NAME="${PROJECT_NAME:-$(basename "$(pwd)" | tr '[:lower:]' '[:upper:]')}"
 FAILED=0; RED='\033[0;31m'; GREEN='\033[0;32m'; BLUE='\033[0;34m'; NC='\033[0m'
