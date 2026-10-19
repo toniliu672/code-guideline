@@ -17,7 +17,7 @@ fi
 
 TEST_FOUND=false
 
-if [[ "$TEST_SUITES" =~ laravel ]]; then
+if [[ "$TEST_SUITES" =~ (laravel|pest|phpunit) ]]; then
     if [ -f "artisan" ] && [ -d "tests" ]; then
         TEST_FOUND=true
         u_cnt=$(find tests/Unit -type f -name "*Test.php" 2>/dev/null | wc -l || echo 0)
@@ -34,7 +34,7 @@ if [[ "$TEST_SUITES" =~ laravel ]]; then
     fi
 fi
 
-if [[ "$TEST_SUITES" =~ frontend ]] && [ -f "package.json" ] && grep -q '"test"' package.json 2>/dev/null; then
+if [[ "$TEST_SUITES" =~ (frontend|vitest|jest) ]] && [ -f "package.json" ] && grep -q '"test"' package.json 2>/dev/null; then
     TEST_FOUND=true
     echo -e "${BLUE}[INFO]${NC} Running JavaScript/TypeScript test runner..."
     npm test -- --passWithNoTests 2>&1 || { echo -e "${RED}[FAIL]${NC} Frontend tests failed!"; exit 1; }

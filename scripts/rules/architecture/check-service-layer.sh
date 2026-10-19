@@ -33,7 +33,17 @@ if [ ${#CONTROLLER_DIRS[@]} -gt 0 ]; then
                 ERRORS=$((ERRORS + 1))
             fi
         fi
-    done < <(find "${CONTROLLER_DIRS[@]}" -type f -name "*Controller.*" 2>/dev/null || true)
+        if [ -d "app/Providers" ]; then
+            while IFS= read -r iface; do
+                [[ -z "$iface" ]] && continue
+                if ! grep -rnq "$iface" app/Providers/ bootstrap/ 2>/dev/null; then
+                    echo -e "${RED}[FAIL]${NC} Unbound Interface injected: $iface in $ctrl is missing from app/Providers/!"
+                    echo -e "${YELLOW}[FIX]${NC}  Register in AppServiceProvider: \$this->app->bind(${iface}::class, Implementation::class);"
+                    ERRORS=$((ERRORS + 1))
+                fi
+            done < <(grep -oE "[A-Za-z0-9_]+Interface\b" "$ctrl" 2>/dev/null | sort -u || true)
+        fi
+    done < <(find "${CONTROLLER_DIRS[@]}" -type f \( -name "*Controller.php" -o -name "*Controller.ts" -o -name "*Controller.js" \) 2>/dev/null || true)
 fi
 
 if [ "$ERRORS" -eq 0 ]; then

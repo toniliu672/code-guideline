@@ -34,7 +34,7 @@ fi
 
 # Clause 3: ISO 27701 Clause 7.4 - PII Protection & Data Minimization (Model Credential Hiding)
 for user_model in app/Models/User.php app/Models/Account.php src/models/User.ts; do
-    if [ -f "$user_model" ] && ! grep -q "'password'" "$user_model" 2>/dev/null; then
+    if [ -f "$user_model" ] && ! grep -qE "['\"]password['\"]" "$user_model" 2>/dev/null; then
         echo -e "${RED}[FAIL]${NC} ISO 27701 Cl.7.4 Violation: 'password' attribute not hidden in $user_model!"
         ERRORS=$((ERRORS + 1))
     fi
@@ -44,8 +44,8 @@ done
 if [ -d "app/Http/Requests" ]; then
     while IFS= read -r req_file; do
         [[ -z "$req_file" ]] && continue
-        if grep -qE "(file|image|avatar|document|upload)" "$req_file" 2>/dev/null; then
-            if ! grep -qE "(mimes:|extensions:|mimetypes:|image)" "$req_file" 2>/dev/null; then
+        if grep -qE "(['\"]file['\"]|['\"]image['\"]|->file\(|Rule::file\b|File::image\b|['\"][^'\"]*\|(file|image)\b)" "$req_file" 2>/dev/null; then
+            if ! grep -qE "(mimes:|extensions:|mimetypes:|image\b|File::types)" "$req_file" 2>/dev/null; then
                 echo -e "${RED}[FAIL]${NC} ISO 27001 A.8.28 Violation: File upload missing MIME validation in $req_file"
                 ERRORS=$((ERRORS + 1))
             fi

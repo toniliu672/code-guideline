@@ -25,9 +25,11 @@ case "$ARCHITECTURE_APPROACH" in
         bash "$SCRIPT_DIR/check-mvc.sh" "$@"
         ;;
     modular)
+        bash "$SCRIPT_DIR/check-mvc.sh" "$@"
         bash "$SCRIPT_DIR/check-modular.sh" "$@"
         ;;
     service-layer|service)
+        bash "$SCRIPT_DIR/check-mvc.sh" "$@"
         bash "$SCRIPT_DIR/check-service-layer.sh" "$@"
         ;;
     microservices|microservice)

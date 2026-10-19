@@ -10,7 +10,7 @@ CHECK_CLASS_CONFLICTS="${CHECK_CLASS_CONFLICTS:-true}"; CHECK_CANONICAL="${CHECK
 ERRORS=0; RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; NC='\033[0m'
 
 echo "==> [FRONTEND-DESIGN] Enforcing Global Tokens, Clean Classes & Tailwind Lint..."
-EXCLUDE="vendor|node_modules|storage|\.git|\.next|\.svelte-kit|dist|build"; EXTS="tsx|jsx|js|svelte|blade\.php|vue|html"
+EXCLUDE="vendor|node_modules|storage|\.git|\.next|\.svelte-kit|dist|build|\.test\.|\.spec\.|__tests__"; EXTS="tsx|jsx|js|svelte|blade\.php|vue|html"
 SHADES="50|100|200|300|400|500|600|700|800|900|950"; PREFIXES="bg|text|border|ring|fill|stroke|accent|from|to|via|divide|outline|decoration|placeholder"
 FAKE_TOKENS="tone|pri|indi|mystic|royal|ruby|mint|aqua|leaf|warmth|warm|neut|err|alert|notice|valid|magenta|soft|mono|ink"
 ALLOWED_CSS_TOKENS="background|foreground|surface(-(muted|elevated|alt))?|card(-foreground)?|popover(-foreground)?|primary(-(foreground|soft|hover))?|secondary(-(foreground|soft))?|muted(-foreground)?|accent(-(foreground|soft))?|(success|warning|danger|destructive|info)(-(foreground|soft))?|border(-(subtle|strong))?|input|ring"

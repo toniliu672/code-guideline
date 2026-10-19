@@ -68,6 +68,7 @@ while IFS= read -r file; do
     fi
 
     php_blocks=$(awk -v max_l="$MAX_PHP_BLOCK_LINES" '
+    /@php/ && /@endphp/ { next }
     /@php/ { in_php=1; start=NR; c=0; next }
     /@endphp/ { if (in_php && c > max_l) print "Lines " start "-" NR " (" c " lines inside @php...@endphp)"; in_php=0; next }
     in_php { c++ }

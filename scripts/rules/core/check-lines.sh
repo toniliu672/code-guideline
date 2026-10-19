@@ -30,7 +30,7 @@ if [ "$CHECK_ALL" = true ]; then
 else
     while IFS= read -r f; do
         [[ -n "$f" ]] && TARGET_FILES+=("$f")
-    done < <(git status --porcelain 2>/dev/null | awk '{print $2}' | grep -E "\.($EXTENSIONS)$" || true)
+    done < <(git status --porcelain -uall 2>/dev/null | awk '{print $NF}' | grep -E "\.($EXTENSIONS)$" || true)
 fi
 
 if [ ${#TARGET_FILES[@]} -eq 0 ]; then

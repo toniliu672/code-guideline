@@ -25,7 +25,7 @@ while IFS= read -r ctrl; do
         echo -e "${RED}[FAIL]${NC} Raw SQL query detected in Controller: $ctrl (move to Repository or Model)"
         ERRORS=$((ERRORS + 1))
     fi
-done < <(find "${CONTROLLER_DIRS[@]}" -type f -name "*Controller.php" -o -name "*Controller.ts" -o -name "*Controller.js" 2>/dev/null || true)
+done < <(find "${CONTROLLER_DIRS[@]}" -type f \( -name "*Controller.php" -o -name "*Controller.ts" -o -name "*Controller.js" \) 2>/dev/null || true)
 
 VIEW_DIRS=()
 for v in "resources/views" "views" "src/views"; do
@@ -35,11 +35,11 @@ done
 if [ ${#VIEW_DIRS[@]} -gt 0 ]; then
     while IFS= read -r view_file; do
         [[ -z "$view_file" ]] && continue
-        if grep -nE "(App\\\\Models\\\\[A-Za-z]+::|Model::|->query\(\)|DB::table)" "$view_file" 2>/dev/null; then
+        if grep -nE "(App\\\\Models\\\\[A-Za-z]+::(where|find|get|all|query|create|update|first|paginate|count|latest|select|orderBy)|Model::(where|find|get|all|query)|->query\(\)|DB::table)" "$view_file" 2>/dev/null; then
             echo -e "${RED}[FAIL]${NC} Direct database query detected inside View: $view_file"
             ERRORS=$((ERRORS + 1))
         fi
-    done < <(find "${VIEW_DIRS[@]}" -type f -name "*.blade.php" -o -name "*.ejs" -o -name "*.hbs" 2>/dev/null || true)
+    done < <(find "${VIEW_DIRS[@]}" -type f \( -name "*.blade.php" -o -name "*.ejs" -o -name "*.hbs" \) 2>/dev/null || true)
 fi
 
 if [ "$ERRORS" -eq 0 ]; then
