@@ -10,6 +10,21 @@ Currently validated on **Laravel (Blade / Pest / PHPUnit)**, with an extensible 
 
 ---
 
+## Background & Motivation
+
+Autonomous AI coding assistants (such as Antigravity CLI powered by Gemini models, alongside other agentic tools) are inherently probabilistic. Over long conversational contexts or across separate working sessions, rules defined solely through soft prompt instructions (system prompts, skill definitions, or `AGENTS.md`) frequently suffer from **instruction drift** and **attention degradation**:
+
+- Agents regress into generating dead inline comments inside function bodies and templates.
+- Source files expand beyond single-responsibility limits (> 100 lines) without decomposition.
+- View templates accumulate monolithic utility class strings ("train-track classes") and unmapped ad-hoc colors.
+- Development debug routines (`dd`, `dump`, `console.log`) unintentionally slip into production branches.
+
+Relying exclusively on self-regulation by an LLM is insufficient because prompt compliance degrades non-deterministically. 
+
+This engine provides a **deterministic gatekeeper outside the model's reasoning loop**. Through standalone compiled executable audits (`/usr/local/bin/guidelines`) and automated Git pre-commit hooks, code changes are physically verified and blocked upon any violation, ensuring absolute adherence to codebase standards regardless of model session state.
+
+---
+
 ## Command Reference
 
 The global executable is located at `/usr/local/bin/guidelines`.
