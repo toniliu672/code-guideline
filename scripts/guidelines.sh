@@ -12,7 +12,21 @@ ARCHITECTURE_APPROACH="${ARCHITECTURE_APPROACH:-auto}"; ENABLE_SECURITY="${ENABL
 
 for arg in "$@"; do
     case "$arg" in
-        --setup|--wizard|--update|--global|--clean=*) exec bash "$SCRIPT_DIR/install.sh" "$@" ;;
+        --config|--status|--info)
+            echo -e "\033[0;34m================================================================\033[0m"
+            echo -e "\033[0;34m   GUIDELINES ACTIVE CONFIGURATION & PROFILE                   \033[0m"
+            echo -e "\033[0;34m================================================================\033[0m"
+            echo -e "   Framework Approach    : \033[0;32m$FRONTEND_APPROACH\033[0m"
+            echo -e "   Blade Architecture    : \033[0;32m$BLADE_APPROACH\033[0m"
+            echo -e "   Strictness Level      : \033[0;32m$STRICTNESS_LEVEL\033[0m"
+            echo -e "   Architecture Paradigm : \033[0;32m$ARCHITECTURE_APPROACH\033[0m"
+            echo -e "   Linter & Analysis     : \033[0;32m${LINTER_TOOL:-auto}\033[0m"
+            echo -e "   Testing Suites        : \033[0;32m${TEST_SUITES:-none}\033[0m"
+            echo -e "   RTK Integration       : \033[0;32m${USE_RTK:-auto}\033[0m"
+            echo -e "   Core Limits           : Max ${MAX_LINES:-100} lines (Layouts: ${MAX_LAYOUT_LINES:-250})"
+            echo -e "\033[0;34m================================================================\033[0m" && exit 0
+            ;;
+        --setup|--wizard|--update|--global|--clean=*|--uninstall*) exec bash "$SCRIPT_DIR/install.sh" "$@" ;;
         --frontend=*) FRONTEND_APPROACH="${arg#*=}" ;;
         --blade=*) BLADE_APPROACH="${arg#*=}" ;;
         --level=*) STRICTNESS_LEVEL="${arg#*=}" ;;
@@ -43,11 +57,7 @@ TARGET="${1:-all}"
 [[ "$TARGET" == --* ]] && TARGET="all"
 
 case "$TARGET" in
-    core)
-        run_step "Zero Comments" "$RULES_DIR/core/check-comments.sh"
-        run_step "Lines Limit" "$RULES_DIR/core/check-lines.sh"
-        run_step "Syntax & Lint" "$RULES_DIR/core/check-syntax-lint.sh"
-        ;;
+    core) for s in comments lines syntax-lint; do run_step "$s" "$RULES_DIR/core/check-$s.sh"; done ;;
     lint|syntax) run_step "Syntax & Lint" "$RULES_DIR/core/check-syntax-lint.sh" ;;
     test|tests|testing) run_step "Automated Tests" "$RULES_DIR/testing/check-testing.sh" ;;
     frontend|ui)
@@ -56,26 +66,12 @@ case "$TARGET" in
         run_step "Design System" "$RULES_DIR/frontend/check-design-system.sh"
         ;;
     design|colors|styling) run_step "Design System" "$RULES_DIR/frontend/check-design-system.sh" ;;
-    arch|architecture)
-        export ARCHITECTURE_APPROACH
-        run_step "Architecture" "$RULES_DIR/architecture/check-architecture.sh"
-        ;;
+    arch|architecture) export ARCHITECTURE_APPROACH; run_step "Architecture" "$RULES_DIR/architecture/check-architecture.sh" ;;
     security|iso) run_step "ISO Compliance" "$RULES_DIR/security/check-iso-compliance.sh" ;;
     all)
-        [ "$ENABLE_CORE" = "true" ] && {
-            run_step "Zero Comments" "$RULES_DIR/core/check-comments.sh"
-            run_step "Lines Limit" "$RULES_DIR/core/check-lines.sh"
-            run_step "Syntax & Lint" "$RULES_DIR/core/check-syntax-lint.sh"
-        }
-        [ "$FRONTEND_APPROACH" != "none" ] && {
-            export FRONTEND_APPROACH BLADE_APPROACH
-            run_step "Frontend" "$RULES_DIR/frontend/check-component-based.sh"
-            run_step "Design System" "$RULES_DIR/frontend/check-design-system.sh"
-        }
-        [ "$ARCHITECTURE_APPROACH" != "none" ] && {
-            export ARCHITECTURE_APPROACH
-            run_step "Architecture" "$RULES_DIR/architecture/check-architecture.sh"
-        }
+        [ "$ENABLE_CORE" = "true" ] && for s in comments lines syntax-lint; do run_step "$s" "$RULES_DIR/core/check-$s.sh"; done
+        [ "$FRONTEND_APPROACH" != "none" ] && { export FRONTEND_APPROACH BLADE_APPROACH; run_step "Frontend" "$RULES_DIR/frontend/check-component-based.sh"; run_step "Design System" "$RULES_DIR/frontend/check-design-system.sh"; }
+        [ "$ARCHITECTURE_APPROACH" != "none" ] && { export ARCHITECTURE_APPROACH; run_step "Architecture" "$RULES_DIR/architecture/check-architecture.sh"; }
         [ "$ENABLE_SECURITY" = "true" ] && run_step "ISO Compliance" "$RULES_DIR/security/check-iso-compliance.sh"
         [ "${ENABLE_TESTING:-false}" = "true" ] && run_step "Automated Tests" "$RULES_DIR/testing/check-testing.sh"
         ;;
