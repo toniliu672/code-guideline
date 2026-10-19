@@ -31,6 +31,7 @@ if [[ "$TEST_SUITES" =~ laravel ]]; then
             php artisan test --compact || { echo -e "${RED}[FAIL]${NC} Artisan tests failed!"; exit 1; }
         fi
         echo -e "${GREEN}[OK]${NC} All Laravel test suites passed (100%)."
+    fi
 fi
 
 if [[ "$TEST_SUITES" =~ frontend ]] && [ -f "package.json" ] && grep -q '"test"' package.json 2>/dev/null; then
