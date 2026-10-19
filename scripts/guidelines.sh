@@ -48,24 +48,19 @@ case "$TARGET" in
         run_step "Lines Limit" "$RULES_DIR/core/check-lines.sh"
         run_step "Syntax & Lint" "$RULES_DIR/core/check-syntax-lint.sh"
         ;;
-    lint|syntax)
-        run_step "Syntax & Lint" "$RULES_DIR/core/check-syntax-lint.sh"
-        ;;
+    lint|syntax) run_step "Syntax & Lint" "$RULES_DIR/core/check-syntax-lint.sh" ;;
+    test|tests|testing) run_step "Automated Tests" "$RULES_DIR/testing/check-testing.sh" ;;
     frontend|ui)
         export FRONTEND_APPROACH BLADE_APPROACH
         run_step "Frontend" "$RULES_DIR/frontend/check-component-based.sh"
         run_step "Design System" "$RULES_DIR/frontend/check-design-system.sh"
         ;;
-    design|colors|styling)
-        run_step "Design System" "$RULES_DIR/frontend/check-design-system.sh"
-        ;;
+    design|colors|styling) run_step "Design System" "$RULES_DIR/frontend/check-design-system.sh" ;;
     arch|architecture)
         export ARCHITECTURE_APPROACH
         run_step "Architecture" "$RULES_DIR/architecture/check-architecture.sh"
         ;;
-    security|iso)
-        run_step "ISO Compliance" "$RULES_DIR/security/check-iso-compliance.sh"
-        ;;
+    security|iso) run_step "ISO Compliance" "$RULES_DIR/security/check-iso-compliance.sh" ;;
     all)
         [ "$ENABLE_CORE" = "true" ] && {
             run_step "Zero Comments" "$RULES_DIR/core/check-comments.sh"
@@ -82,9 +77,10 @@ case "$TARGET" in
             run_step "Architecture" "$RULES_DIR/architecture/check-architecture.sh"
         }
         [ "$ENABLE_SECURITY" = "true" ] && run_step "ISO Compliance" "$RULES_DIR/security/check-iso-compliance.sh"
+        [ "${ENABLE_TESTING:-false}" = "true" ] && run_step "Automated Tests" "$RULES_DIR/testing/check-testing.sh"
         ;;
     *)
-        echo -e "${RED}[ERROR]${NC} Unknown module: $TARGET (all | core | lint | frontend | design | arch | security | iso)"
+        echo -e "${RED}[ERROR]${NC} Unknown module: $TARGET (all | core | lint | test | frontend | design | arch | iso)"
         exit 1
         ;;
 esac
