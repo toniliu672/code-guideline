@@ -8,7 +8,7 @@ mkdir -p "$OUT_DIR"
 TMP_BUILD="$(mktemp -d /dev/shm/.gr_build_XXXXXX 2>/dev/null || mktemp -d /tmp/.gr_build_XXXXXX)"
 trap 'rm -rf "$TMP_BUILD"' EXIT
 
-tar -czf "$TMP_BUILD/bundle.tar.gz" -C "$ROOT_DIR" scripts/guidelines.sh scripts/install.sh scripts/wizard.sh scripts/rules templates/AGENTS.md
+tar -czf "$TMP_BUILD/bundle.tar.gz" -C "$ROOT_DIR" scripts/guidelines.sh scripts/install.sh scripts/wizard.sh scripts/rules templates/AGENTS.md VERSION
 
 python3 - "$TMP_BUILD/bundle.tar.gz" "$TMP_BUILD/payload.h" << 'PYEOF'
 import sys

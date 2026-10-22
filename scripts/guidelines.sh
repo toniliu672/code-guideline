@@ -4,14 +4,20 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RULES_DIR="$SCRIPT_DIR/rules"
 [ -f "$RULES_DIR/config.env" ] && source "$RULES_DIR/config.env"
+[ -f "$(pwd)/scripts/rules/config.env" ] && source "$(pwd)/scripts/rules/config.env"
 
 # MASTER RULES CONFIGURATION (Configure here or via config.env)
 ENABLE_CORE="${ENABLE_CORE:-true}"; FRONTEND_APPROACH="${FRONTEND_APPROACH:-auto}"
 BLADE_APPROACH="${BLADE_APPROACH:-auto}"; STRICTNESS_LEVEL="${STRICTNESS_LEVEL:-standard}"
 ARCHITECTURE_APPROACH="${ARCHITECTURE_APPROACH:-auto}"; ENABLE_SECURITY="${ENABLE_SECURITY:-true}"
+CHECK_COLOR_TOKENS="${CHECK_COLOR_TOKENS:-true}"; CHECK_TRAIN_TRACK="${CHECK_TRAIN_TRACK:-true}"
+CHECK_CLASS_CONFLICTS="${CHECK_CLASS_CONFLICTS:-true}"; CHECK_CANONICAL_CLASSES="${CHECK_CANONICAL_CLASSES:-true}"
 
 for arg in "$@"; do
     case "$arg" in
+        -v|--version)
+            v="dev"; for f in "$SCRIPT_DIR/../VERSION" "$SCRIPT_DIR/VERSION"; do [ -f "$f" ] && v=$(cat "$f"); done
+            echo "guidelines version $v" && exit 0 ;;
         --config|--status|--info)
             echo -e "\033[0;34m================================================================\033[0m"
             echo -e "\033[0;34m   GUIDELINES ACTIVE CONFIGURATION & PROFILE                   \033[0m"

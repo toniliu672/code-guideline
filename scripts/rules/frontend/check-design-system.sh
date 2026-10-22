@@ -3,6 +3,7 @@ set -euo pipefail
 
 RULES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 [ -f "$RULES_DIR/config.env" ] && source "$RULES_DIR/config.env"
+[ -f "$(pwd)/scripts/rules/config.env" ] && source "$(pwd)/scripts/rules/config.env"
 
 MAX_CHARS="${MAX_CLASS_CHARS:-100}"; MAX_WORDS="${MAX_CLASS_WORDS:-10}"
 CHECK_COLORS="${CHECK_COLOR_TOKENS:-true}"; CHECK_TRAIN_TRACK="${CHECK_TRAIN_TRACK:-true}"

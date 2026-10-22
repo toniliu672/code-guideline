@@ -17,10 +17,11 @@ if [ ${#SERVICE_DIRS[@]} -eq 0 ]; then
     exit 0
 fi
 
+EXCLUDE="vendor|node_modules|storage|\.git|\.next|\.svelte-kit|dist|build"
 CONTROLLER_DIRS=()
-for d in "app/Http/Controllers" "src/controllers" "controllers"; do
-    [ -d "$d" ] && CONTROLLER_DIRS+=("$d")
-done
+while IFS= read -r d; do
+    [[ -n "$d" ]] && CONTROLLER_DIRS+=("$d")
+done < <(find . -type d -iname "controllers" 2>/dev/null | grep -vE "($EXCLUDE)" || true)
 
 if [ ${#CONTROLLER_DIRS[@]} -gt 0 ]; then
     while IFS= read -r ctrl; do
@@ -43,7 +44,7 @@ if [ ${#CONTROLLER_DIRS[@]} -gt 0 ]; then
                 fi
             done < <(grep -oE "[A-Za-z0-9_]+Interface\b" "$ctrl" 2>/dev/null | sort -u || true)
         fi
-    done < <(find "${CONTROLLER_DIRS[@]}" -type f \( -name "*Controller.php" -o -name "*Controller.ts" -o -name "*Controller.js" \) 2>/dev/null || true)
+    done < <({ find "${CONTROLLER_DIRS[@]}" -type f \( -name "*.php" -o -name "*.ts" -o -name "*.js" \) 2>/dev/null; find . -type f \( -name "*Controller.php" -o -name "*Controller.ts" -o -name "*Controller.js" \) 2>/dev/null | grep -vE "($EXCLUDE)"; } | sort -u || true)
 fi
 
 if [ "$ERRORS" -eq 0 ]; then

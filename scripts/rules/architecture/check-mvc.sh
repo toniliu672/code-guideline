@@ -7,10 +7,11 @@ RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; NC='\033[0m'
 
 echo "==> [ARCH-MVC] Enforcing MVC (Model-View-Controller) Separation of Concerns..."
 
+EXCLUDE="vendor|node_modules|storage|\.git|\.next|\.svelte-kit|dist|build"
 CONTROLLER_DIRS=()
-for d in "app/Http/Controllers" "src/controllers" "controllers"; do
-    [ -d "$d" ] && CONTROLLER_DIRS+=("$d")
-done
+while IFS= read -r d; do
+    [[ -n "$d" ]] && CONTROLLER_DIRS+=("$d")
+done < <(find . -type d -iname "controllers" 2>/dev/null | grep -vE "($EXCLUDE)" || true)
 
 if [ ${#CONTROLLER_DIRS[@]} -eq 0 ]; then
     echo -e "${YELLOW}[INFO]${NC} MVC Controller directories not found. Skipping MVC audit."
@@ -25,7 +26,7 @@ while IFS= read -r ctrl; do
         echo -e "${RED}[FAIL]${NC} Raw SQL query detected in Controller: $ctrl (move to Repository or Model)"
         ERRORS=$((ERRORS + 1))
     fi
-done < <(find "${CONTROLLER_DIRS[@]}" -type f \( -name "*Controller.php" -o -name "*Controller.ts" -o -name "*Controller.js" \) 2>/dev/null || true)
+done < <({ find "${CONTROLLER_DIRS[@]}" -type f \( -name "*.php" -o -name "*.ts" -o -name "*.js" \) 2>/dev/null; find . -type f \( -name "*Controller.php" -o -name "*Controller.ts" -o -name "*Controller.js" \) 2>/dev/null | grep -vE "($EXCLUDE)"; } | sort -u || true)
 
 VIEW_DIRS=()
 for v in "resources/views" "views" "src/views"; do

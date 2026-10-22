@@ -36,3 +36,10 @@ All checks must pass 100% before concluding your turn.
 ## 6. Git Protocol
 - Never execute `git commit` unless explicitly commanded by the user with the keyword "commit".
 - Commit messages must follow Conventional Commits format (`type(scope): summary` + bullet points).
+
+## 7. Versioning Protocol (Semantic Versioning)
+Follow standard `MAJOR.MINOR.PATCH` increments in `VERSION`:
+- **Major (`1.0.0`)**: Breaking changes or major architectural restructuring.
+- **Minor (`1.1.0`)**: New features, new audit rules, or backwards-compatible CLI additions.
+- **Mikro / Patch (`1.1.1`)**: Bug fixes, regex corrections, folder detection enhancements, or false positive fixes.
+Always update `VERSION` strictly according to this scope and re-compile the binary via `scripts/build.sh`.

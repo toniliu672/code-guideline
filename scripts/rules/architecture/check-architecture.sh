@@ -13,7 +13,7 @@ if [ "$ARCHITECTURE_APPROACH" = "auto" ]; then
         ARCHITECTURE_APPROACH="modular"
     elif [ -d "app/Services" ] || [ -d "src/services" ]; then
         ARCHITECTURE_APPROACH="service-layer"
-    elif [ -d "app/Http/Controllers" ] || [ -d "controllers" ]; then
+    elif [ -n "$(find . -maxdepth 4 -type d -iname "controllers" 2>/dev/null | grep -vE "vendor|node_modules|storage|\.git" | head -n 1)" ]; then
         ARCHITECTURE_APPROACH="mvc"
     else
         ARCHITECTURE_APPROACH="none"

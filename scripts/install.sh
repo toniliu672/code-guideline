@@ -61,6 +61,7 @@ fi
 
 if [ "$MODE" = "--update" ]; then
     echo -e "${BLUE}==> Updating Global Guidelines from GitHub...${NC}"
+    OLD_V="unknown"; [ -x "$GLOBAL_BIN" ] && OLD_V="$("$GLOBAL_BIN" -v 2>/dev/null | awk '{print $NF}' || echo "unknown")"
     if [ -d "/home/dev/projects/guide-rules/.git" ]; then
         git -C /home/dev/projects/guide-rules pull --ff-only origin main 2>/dev/null || true
         install_global_binary
@@ -70,7 +71,8 @@ if [ "$MODE" = "--update" ]; then
         curl -fsSL "$REPO_RAW/templates/AGENTS.md" -o "$TMP_U/AGENTS.md"
         sync_global_rule "$TMP_U/AGENTS.md" && rm -rf "$TMP_U"
     fi
-    echo -e "${GREEN}[OK]${NC} Global guidelines updated to latest version!" && exit 0
+    NEW_V="unknown"; [ -x "$GLOBAL_BIN" ] && NEW_V="$("$GLOBAL_BIN" -v 2>/dev/null | awk '{print $NF}' || echo "unknown")"
+    echo -e "${GREEN}[OK]${NC} Global guidelines updated: ${OLD_V} -> ${NEW_V}!" && exit 0
 fi
 
 [ "$MODE" = "--global" ] && { install_global_binary; exit 0; }
