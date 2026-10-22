@@ -50,10 +50,11 @@ echo -e "${BLUE}================================================================
 echo -e "${BLUE}   MASTER AUDIT: ${PROJECT_NAME} (RULES & GUIDELINES ENGINE)     ${NC}"
 echo -e "${BLUE}================================================================${NC}"
 
+EXTRA_ARGS=("$@")
 run_step() {
     local script="$2"
     shift 2
-    if [ -f "$script" ] && ! bash "$script" "$@"; then
+    if [ -f "$script" ] && ! bash "$script" "$@" "${EXTRA_ARGS[@]}"; then
         FAILED=$((FAILED + 1))
     fi
     [ -f "$script" ] && echo ""

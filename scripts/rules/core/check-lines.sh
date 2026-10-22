@@ -14,27 +14,27 @@ LINE_EXCLUDES="${LINE_EXCLUDES:-database/migrations|database/seeders|config/}"
 ERRORS=0
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; NC='\033[0m'
 
-CHECK_ALL=false
+GIT_ONLY=false
 for arg in "$@"; do
-    [ "$arg" == "--all" ] && CHECK_ALL=true
+    ([ "$arg" == "--git-only" ] || [ "$arg" == "--staged" ]) && GIT_ONLY=true
     [ "$arg" == "--strict" ] && STRICT_LINES=true
 done
 
 echo "==> [CORE] Enforcing Lines Limit (Max $MAX_LINES lines for logic, $MAX_LAYOUT_LINES for layouts)..."
 TARGET_FILES=()
 
-if [ "$CHECK_ALL" = true ]; then
-    while IFS= read -r f; do
-        [[ -n "$f" ]] && TARGET_FILES+=("$f")
-    done < <(find . -type f 2>/dev/null | grep -E "\.($EXTENSIONS)$" | grep -vE "($EXCLUDE)" || true)
-else
+if [ "$GIT_ONLY" = true ]; then
     while IFS= read -r f; do
         [[ -n "$f" ]] && TARGET_FILES+=("$f")
     done < <(git status --porcelain -uall 2>/dev/null | awk '{print $NF}' | grep -E "\.($EXTENSIONS)$" || true)
+else
+    while IFS= read -r f; do
+        [[ -n "$f" ]] && TARGET_FILES+=("$f")
+    done < <(find . -type f 2>/dev/null | grep -E "\.($EXTENSIONS)$" | grep -vE "($EXCLUDE)" || true)
 fi
 
 if [ ${#TARGET_FILES[@]} -eq 0 ]; then
-    echo -e "${YELLOW}[INFO]${NC} No modified git files to check for line limits (Use --all to scan entire project)."
+    echo -e "${YELLOW}[INFO]${NC} No code files found to check for line limits."
     exit 0
 fi
 
