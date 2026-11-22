@@ -3,8 +3,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RULES_DIR="$SCRIPT_DIR/rules"
-[ -f "$RULES_DIR/config.env" ] && source "$RULES_DIR/config.env"
-[ -f "$(pwd)/scripts/rules/config.env" ] && source "$(pwd)/scripts/rules/config.env"
+[ -f "$RULES_DIR/config.env" ] && set -a && source "$RULES_DIR/config.env" && set +a
+[ -f "$RULES_DIR/lib/ignore.sh" ] && source "$RULES_DIR/lib/ignore.sh" && init_guidelines_guard
+[ -f "$(pwd)/scripts/rules/config.env" ] && set -a && source "$(pwd)/scripts/rules/config.env" && set +a
 
 # MASTER RULES CONFIGURATION (Configure here or via config.env)
 ENABLE_CORE="${ENABLE_CORE:-true}"; FRONTEND_APPROACH="${FRONTEND_APPROACH:-auto}"
@@ -32,7 +33,7 @@ for arg in "$@"; do
             echo -e "   Core Limits           : Max ${MAX_LINES:-100} lines (Layouts: ${MAX_LAYOUT_LINES:-250})"
             echo -e "\033[0;34m================================================================\033[0m" && exit 0
             ;;
-        --setup|--wizard|--update|--global|--clean=*|--uninstall*) exec bash "$SCRIPT_DIR/install.sh" "$@" ;;
+        --setup|--wizard|--update|--global|--skills|--clean=*|--uninstall*) exec bash "$SCRIPT_DIR/install.sh" "$@" ;;
         --frontend=*) FRONTEND_APPROACH="${arg#*=}" ;;
         --blade=*) BLADE_APPROACH="${arg#*=}" ;;
         --level=*) STRICTNESS_LEVEL="${arg#*=}" ;;
@@ -41,7 +42,7 @@ for arg in "$@"; do
         --no-security) ENABLE_SECURITY=false ;;
     esac
 done
-export FRONTEND_APPROACH BLADE_APPROACH STRICTNESS_LEVEL ARCHITECTURE_APPROACH
+export FRONTEND_APPROACH BLADE_APPROACH STRICTNESS_LEVEL ARCHITECTURE_APPROACH STRICT_LINES MAX_LINES MAX_LAYOUT_LINES LINE_EXCLUDES ENABLE_CORE ENABLE_SECURITY CHECK_COLOR_TOKENS CHECK_TRAIN_TRACK CHECK_CLASS_CONFLICTS CHECK_CANONICAL_CLASSES
 
 PROJECT_NAME="${PROJECT_NAME:-$(basename "$(pwd)" | tr '[:lower:]' '[:upper:]')}"
 FAILED=0; RED='\033[0;31m'; GREEN='\033[0;32m'; BLUE='\033[0;34m'; NC='\033[0m'

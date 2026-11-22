@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+RULES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+[ -f "$RULES_DIR/lib/ignore.sh" ] && source "$RULES_DIR/lib/ignore.sh" && init_guidelines_guard
 ERRORS=0
 CHECKED=0
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; NC='\033[0m'
@@ -25,11 +27,12 @@ for mod_root in "${MODULAR_DIRS[@]}"; do
         
         while IFS= read -r f; do
             [[ -z "$f" ]] && continue
-            if grep -nE "from ['\"].*/(modules|features)/(?!$mod_name/).*/internal/" "$f" 2>/dev/null; then
+            is_ignored "$f" && continue
+            if grep -nE "from ['\"].*/(modules|features)/[^/]+/internal/" "$f" 2>/dev/null | grep -qvE "/(modules|features)/$mod_name/internal/"; then
                 echo -e "${RED}[FAIL]${NC} Module encapsulation violation in: $f (direct access to another module's internal state forbidden)"
                 ERRORS=$((ERRORS + 1))
             fi
-        done < <(find "$module" -type f -name "*.ts" -o -name "*.js" -o -name "*.php" 2>/dev/null || true)
+        done < <(find "$module" -type f \( -name "*.ts" -o -name "*.js" -o -name "*.php" \) 2>/dev/null || true)
     done
 done
 

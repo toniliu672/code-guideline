@@ -4,6 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RULES_DIR="$SCRIPT_DIR/.."
 [ -f "$RULES_DIR/config.env" ] && source "$RULES_DIR/config.env"
+[ -f "$RULES_DIR/lib/ignore.sh" ] && source "$RULES_DIR/lib/ignore.sh" && init_guidelines_guard
+[ -f "$(pwd)/scripts/rules/config.env" ] && source "$(pwd)/scripts/rules/config.env"
 
 CHECK_SYNTAX="${CHECK_SYNTAX:-true}"
 CHECK_STATIC_ANALYSIS="${CHECK_STATIC_ANALYSIS:-true}"
@@ -28,11 +30,12 @@ if [[ "$LINTER_TOOL" =~ ^(auto|flutter)$ ]] && [ "$CHECK_STATIC_ANALYSIS" = "tru
     dart analyze --fatal-infos || ERRORS=$((ERRORS + 1))
 fi
 
-EXCLUDE="vendor|node_modules|storage|\.git"
 PHP_FILES=()
 while IFS= read -r f; do
-    [[ -n "$f" ]] && PHP_FILES+=("$f")
-done < <(find . -type f -name "*.php" 2>/dev/null | grep -vE "($EXCLUDE)" || true)
+    [[ -z "$f" ]] && continue
+    is_ignored "$f" && continue
+    PHP_FILES+=("$f")
+done < <(find . -type f -name "*.php" 2>/dev/null || true)
 
 if [ ${#PHP_FILES[@]} -eq 0 ]; then
     [ "$ERRORS" -eq 0 ] && { echo -e "${GREEN}[OK]${NC} Syntax/lint audit passed."; exit 0; }

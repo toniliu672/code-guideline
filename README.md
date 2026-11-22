@@ -25,6 +25,52 @@ This engine provides a **deterministic gatekeeper outside the model's reasoning 
 
 ---
 
+## Installation & Usage
+
+### Option A: Quick Install — No Clone Required (Recommended)
+Download the standalone pre-compiled binary from **GitHub Releases** (already bundles all audit rules, templates, and AI skills):
+
+**Global Install** (available in all projects):
+```bash
+sudo curl -fsSL https://github.com/toniliu672/code-guideline/releases/latest/download/guidelines -o /usr/local/bin/guidelines
+sudo chmod +x /usr/local/bin/guidelines
+guidelines --skills    # optional: sync bundled AI skills (e.g. bugbot)
+```
+
+Or one-line installer (downloads binary + syncs global AI rules & skills):
+```bash
+curl -fsSL https://raw.githubusercontent.com/toniliu672/code-guideline/main/scripts/install.sh | bash -s -- --update
+```
+
+**Project-Only** (single local binary, zero global changes):
+```bash
+cd /path/to/your-project
+curl -fsSL https://github.com/toniliu672/code-guideline/releases/latest/download/guidelines -o ./guidelines
+chmod +x ./guidelines
+./guidelines
+```
+
+### Option B: Install From Source (After Cloning)
+```bash
+git clone https://github.com/toniliu672/code-guideline.git guide-rules
+cd guide-rules
+
+# Global install (builds binary -> /usr/local/bin/guidelines + syncs rules & skills)
+bash scripts/install.sh --global
+# Or interactive setup wizard:
+bash scripts/install.sh --wizard
+```
+
+To run **project-only from source** without installing globally:
+```bash
+cd /path/to/your-project
+bash /path/to/guide-rules/guidelines.sh
+```
+
+For per-project settings without touching global config, add `.guidelines.env` and/or `.guidelinesignore` to your project root and commit them to Git.
+
+---
+
 ## Command Reference
 
 The global executable is located at `/usr/local/bin/guidelines`.
@@ -36,15 +82,16 @@ The global executable is located at `/usr/local/bin/guidelines`.
 | `guidelines` | Executes full audit suite based on active configuration |
 | `guidelines --config` | Displays current active configuration and profile |
 | `guidelines --wizard` | Launches terminal interactive setup wizard |
-| `guidelines --update` | Updates binary executable and global rules from upstream repository |
-| `guidelines core` | Runs core audits only (Zero inline comments, file line limits) |
+| `guidelines --skills` | Syncs bundled AI skills (e.g. `bugbot`) to global Gemini/Antigravity skill directories |
+| `guidelines --update` | Updates binary executable, global rules, and bundled skills from upstream repository |
+| `guidelines core` | Runs core audits only (Zero inline comments, file line limits, syntax/lint) |
 | `guidelines lint` | Runs static analysis and syntax validation |
 | `guidelines test` | Executes configured automated test suites |
 | `guidelines frontend` | Validates frontend component structure and design system rules |
 | `guidelines design` | Validates color tokens and class string length limits |
 | `guidelines arch` | Validates architectural pattern boundaries |
 | `guidelines security` | Validates ISO 27001, 27701, and 25010 security rules |
-| `guidelines --uninstall` | Removes global executable binary and cleans global AI rules |
+| `guidelines --uninstall` | Removes global executable binary, synced skills, and global AI rules |
 | `guidelines <target_dir>` | Installs pre-commit hook into target project |
 
 ### CLI Flags (Runtime Overrides)
@@ -52,8 +99,8 @@ The global executable is located at `/usr/local/bin/guidelines`.
 Configuration options can be overridden dynamically per execution:
 
 ```bash
-# Strictness level (standard | strict | super-strict)
-guidelines --level=super-strict
+# Strictness level (standard | moderate | strict)
+guidelines --level=strict
 
 # Frontend framework (auto | blade | react | next | svelte | flutter | none)
 guidelines --frontend=blade --blade=standard
@@ -97,11 +144,11 @@ An interactive terminal checklist is available to configure presets:
 guidelines --wizard
 ```
 
-### Configuration File (`config.env`)
-Configuration is maintained in `scripts/rules/config.env`:
+### Configuration File (`config.env` & Per-Project `.guidelines.env`)
+Global defaults are maintained in `scripts/rules/config.env`. For project-specific overrides, create a `.guidelines.env` file in the target project root and **commit it to Git**:
 
 ```bash
-# Strictness level: standard | strict | super-strict
+# Strictness level: standard | moderate | strict
 STRICTNESS_LEVEL="standard"
 
 # Frontend adapter (Laravel Blade is currently validated)
@@ -114,6 +161,38 @@ ARCHITECTURE_APPROACH="auto"
 # Automated Test Suites (comma-separated: pest, phpunit, vitest, jest, k6, flutter)
 TEST_SUITES="pest"
 ```
+
+### Ignoring Files Per Project (`.guidelinesignore`)
+Test files (`tests/`, `test/`, `__tests__/`, `*.test.*`, `*.spec.*`, `cypress/`, `e2e/`, `playwright/`, `k6/`) and framework/system files (`bootstrap/app.php`, `bootstrap/cache/`, `public/index.php`, `public/build/`, `resources/views/errors/`, `resources/views/mail/`, `database/factories/`, `*.config.*`, `artisan`) are **excluded automatically by default**.
+
+For project-specific exclusions (e.g. legacy files), create `.guidelinesignore` in the project root using `.gitignore` syntax and **commit it to Git**:
+
+```text
+app/Legacy/OldExport.php
+resources/views/custom-pdf/**
+```
+
+**Anti-Tamper Protection (`HEAD`-Only)**:
+- `guidelines` reads `.guidelinesignore` and `.guidelines.env` **only from the latest Git commit (`HEAD`)**, never from uncommitted working tree edits.
+- If an AI agent modifies or creates either file without a human commit, `guidelines` prints a `[WARNING]` with the diff and **ignores the uncommitted changes**.
+
+---
+
+## Bundled AI Skills (`bugbot`)
+
+This repository bundles reusable AI agent skills under `skills/`:
+
+- **`bugbot`** (`skills/bugbot/SKILL.md`): High-signal automated code reviewer for git diffs, staged changes, and commits. Focuses strictly on real bugs, regressions, security vulnerabilities, and runtime/data risks without style nitpicks.
+
+### Syncing Skills
+- **Global sync**: Automatically synced during `bash scripts/install.sh --global` or `guidelines --update`, or manually via:
+  ```bash
+  guidelines --skills
+  # or directly from the repo:
+  bash scripts/sync-skills.sh
+  ```
+- **Project-only usage**: Copy `skills/bugbot` into your project or reference `skills/bugbot/SKILL.md` directly in your AI session when asking for a pre-push diff review.
+- **Note**: `bugbot` is an AI agent skill triggered via prompt (e.g. *"run bugbot"*), not a bash step executed inside `guidelines` pre-commit audits.
 
 ---
 

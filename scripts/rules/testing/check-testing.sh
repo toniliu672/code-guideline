@@ -3,6 +3,7 @@ set -euo pipefail
 
 RULES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 [ -f "$RULES_DIR/config.env" ] && source "$RULES_DIR/config.env"
+[ -f "$(pwd)/scripts/rules/config.env" ] && source "$(pwd)/scripts/rules/config.env"
 
 RUN_TESTS="${RUN_AUTOMATED_TESTS:-true}"
 TEST_SUITES="${TEST_SUITES:-laravel,k6}"

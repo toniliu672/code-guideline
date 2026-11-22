@@ -3,8 +3,10 @@ set -euo pipefail
 
 RULES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 [ -f "$RULES_DIR/config.env" ] && source "$RULES_DIR/config.env"
+[ -f "$RULES_DIR/lib/ignore.sh" ] && source "$RULES_DIR/lib/ignore.sh" && init_guidelines_guard
+[ -f "$(pwd)/scripts/rules/config.env" ] && source "$(pwd)/scripts/rules/config.env"
 
-CODE_DIRS="${CODE_DIRS:-app src lib routes database components pages}"
+CODE_DIRS="${CODE_DIRS:-app src lib routes components pages}"
 ERRORS=0
 CHECKED=0
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; NC='\033[0m'
@@ -22,10 +24,11 @@ if [ ${#EXISTING_DIRS[@]} -eq 0 ]; then
 fi
 
 EXTENSIONS="php|blade\.php|js|jsx|ts|tsx|svelte|dart"
-EXCLUDE_DIRS="vendor|node_modules|storage|\.git|\.next|\.svelte-kit|dist|build|\.dart_tool"
 
 while IFS= read -r file; do
     [[ -z "$file" ]] && continue
+    is_ignored "$file" && continue
+    [[ "$file" =~ (^|/)(database/(migrations|seeders|factories)|config)/ ]] && continue
     CHECKED=$((CHECKED + 1))
     
     violating=$(grep -n -E '^[[:space:]]*//|<!--|{{--' "$file" 2>/dev/null || true)
@@ -35,7 +38,7 @@ while IFS= read -r file; do
         echo -e "${YELLOW}[FIX]${NC}  Remove inline comments (//, <!--, {{-- ) and use descriptive variable/function names instead."
         ERRORS=$((ERRORS + 1))
     fi
-done < <(find "${EXISTING_DIRS[@]}" -type f 2>/dev/null | grep -E "\.($EXTENSIONS)$" | grep -vE "($EXCLUDE_DIRS)" || true)
+done < <(find "${EXISTING_DIRS[@]}" -type f 2>/dev/null | grep -E "\.($EXTENSIONS)$" || true)
 
 if [ "$CHECKED" -eq 0 ]; then
     echo -e "${YELLOW}[INFO]${NC} No code files matched for comments audit."

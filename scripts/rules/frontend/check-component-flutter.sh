@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+RULES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+[ -f "$RULES_DIR/lib/ignore.sh" ] && source "$RULES_DIR/lib/ignore.sh" && init_guidelines_guard
 ERRORS=0
 CHECKED=0
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; NC='\033[0m'
@@ -30,6 +32,7 @@ done
 if [ ${#SCREEN_DIRS[@]} -gt 0 ]; then
     while IFS= read -r screen; do
         [[ -z "$screen" ]] && continue
+        is_ignored "$screen" && continue
         CHECKED=$((CHECKED + 1))
         lines=$(wc -l < "$screen")
         if [ "$lines" -gt 90 ]; then

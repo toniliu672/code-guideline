@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-.}")/.." 2>/dev/null && pwd || pwd)"
 MODE="${1:---global}"
 REPO_RAW="https://raw.githubusercontent.com/toniliu672/code-guideline/main"
 GLOBAL_BIN="/usr/local/bin/guidelines"
@@ -34,10 +34,12 @@ install_global_binary() {
     [ -f "$SOURCE_DIR/bin/guidelines" ] && cp "$SOURCE_DIR/bin/guidelines" "$GLOBAL_BIN" && chmod 755 "$GLOBAL_BIN"
     echo -e "${GREEN}[OK]${NC} Global executable installed: $GLOBAL_BIN"
     sync_global_rule "$SOURCE_DIR/templates/AGENTS.md"
+    [ -f "$SOURCE_DIR/scripts/sync-skills.sh" ] && bash "$SOURCE_DIR/scripts/sync-skills.sh" "$SOURCE_DIR/skills"
 }
 
 uninstall() {
     rm -f "$GLOBAL_BIN"
+    [ -f "$SOURCE_DIR/scripts/sync-skills.sh" ] && bash "$SOURCE_DIR/scripts/sync-skills.sh" --uninstall "$SOURCE_DIR/skills"
     python3 - "${TARGET_FILES[@]}" << 'PYEOF'
 import sys, re
 for gf in sys.argv[1:]:
@@ -70,11 +72,13 @@ if [ "$MODE" = "--update" ]; then
         curl -fsSL "https://github.com/toniliu672/code-guideline/releases/latest/download/guidelines" -o "$GLOBAL_BIN" && chmod 755 "$GLOBAL_BIN"
         curl -fsSL "$REPO_RAW/templates/AGENTS.md" -o "$TMP_U/AGENTS.md"
         sync_global_rule "$TMP_U/AGENTS.md" && rm -rf "$TMP_U"
+        "$GLOBAL_BIN" --skills
     fi
     NEW_V="unknown"; [ -x "$GLOBAL_BIN" ] && NEW_V="$("$GLOBAL_BIN" -v 2>/dev/null | awk '{print $NF}' || echo "unknown")"
     echo -e "${GREEN}[OK]${NC} Global guidelines updated: ${OLD_V} -> ${NEW_V}!" && exit 0
 fi
 
+[ "$MODE" = "--skills" ] && { bash "$SOURCE_DIR/scripts/sync-skills.sh" "$SOURCE_DIR/skills"; exit 0; }
 [ "$MODE" = "--global" ] && { install_global_binary; exit 0; }
 
 TARGET_DIR="$(cd "${MODE#--clean=}" 2>/dev/null && pwd || true)"

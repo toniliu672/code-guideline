@@ -3,15 +3,16 @@ set -euo pipefail
 
 RULES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 [ -f "$RULES_DIR/config.env" ] && source "$RULES_DIR/config.env"
+[ -f "$RULES_DIR/lib/ignore.sh" ] && source "$RULES_DIR/lib/ignore.sh" && init_guidelines_guard
+[ -f "$(pwd)/scripts/rules/config.env" ] && source "$(pwd)/scripts/rules/config.env"
 
 MAX_LINES="${MAX_LINES:-100}"
 MAX_LAYOUT_LINES="${MAX_LAYOUT_LINES:-250}"
 STRICT_LINES="${STRICT_LINES:-true}"
 EXTENSIONS="php|blade\.php|js|jsx|ts|tsx|svelte|dart|py|sh"
-EXCLUDE="vendor|node_modules|storage|\.git|\.next|\.svelte-kit|dist|build|\.dart_tool"
 LINE_EXCLUDES="${LINE_EXCLUDES:-database/migrations|database/seeders|config/}"
 
-ERRORS=0
+ERRORS=0; CHECKED=0
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; NC='\033[0m'
 
 GIT_ONLY=false
@@ -30,19 +31,16 @@ if [ "$GIT_ONLY" = true ]; then
 else
     while IFS= read -r f; do
         [[ -n "$f" ]] && TARGET_FILES+=("$f")
-    done < <(find . -type f 2>/dev/null | grep -E "\.($EXTENSIONS)$" | grep -vE "($EXCLUDE)" || true)
-fi
-
-if [ ${#TARGET_FILES[@]} -eq 0 ]; then
-    echo -e "${YELLOW}[INFO]${NC} No code files found to check for line limits."
-    exit 0
+    done < <(find . -type f 2>/dev/null | grep -E "\.($EXTENSIONS)$" || true)
 fi
 
 for file in "${TARGET_FILES[@]}"; do
     [ ! -f "$file" ] && continue
+    is_ignored "$file" && continue
     if [[ -n "$LINE_EXCLUDES" ]] && [[ "$file" =~ $LINE_EXCLUDES ]]; then
         continue
     fi
+    CHECKED=$((CHECKED + 1))
     lines=$(wc -l < "$file")
     limit="$MAX_LINES"
     if [[ "$file" =~ (layouts/|layout/|layout\.(tsx|jsx|js|blade\.php)|\+layout\.svelte) ]]; then
@@ -55,8 +53,13 @@ for file in "${TARGET_FILES[@]}"; do
     fi
 done
 
+if [ "$CHECKED" -eq 0 ]; then
+    echo -e "${YELLOW}[INFO]${NC} No code files found to check for line limits."
+    exit 0
+fi
+
 if [ "$ERRORS" -eq 0 ]; then
-    echo -e "${GREEN}[OK]${NC} All ${#TARGET_FILES[@]} file(s) comply with maximum $MAX_LINES lines limit."
+    echo -e "${GREEN}[OK]${NC} All $CHECKED file(s) comply with maximum $MAX_LINES lines limit."
     exit 0
 else
     if [ "$STRICT_LINES" = "true" ]; then

@@ -4,6 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RULES_DIR="$SCRIPT_DIR/.."
 [ -f "$RULES_DIR/config.env" ] && source "$RULES_DIR/config.env"
+[ -f "$RULES_DIR/lib/ignore.sh" ] && source "$RULES_DIR/lib/ignore.sh" && init_guidelines_guard
+[ -f "$(pwd)/scripts/rules/config.env" ] && source "$(pwd)/scripts/rules/config.env"
 
 VIEWS_DIR="${VIEWS_DIR:-resources/views}"
 BLADE_APPROACH="${BLADE_APPROACH:-auto}"
@@ -46,6 +48,7 @@ echo "==> [FRONTEND-BLADE] Auditing Blade ($BLADE_APPROACH | Level: $STRICTNESS_
 
 while IFS= read -r file; do
     [[ -z "$file" ]] && continue
+    is_ignored "$file" && continue
     is_exempt=false
     if [ "$BLADE_APPROACH" != "atomic" ]; then
         if [[ "$file" =~ $VIEWS_DIR/components/ ]] || [[ "$file" =~ $VIEWS_DIR/layouts/ ]] || [[ "$file" =~ $VIEWS_DIR/layout/ ]]; then

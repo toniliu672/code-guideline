@@ -3,6 +3,8 @@ set -euo pipefail
 
 RULES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 [ -f "$RULES_DIR/config.env" ] && source "$RULES_DIR/config.env"
+[ -f "$RULES_DIR/lib/ignore.sh" ] && source "$RULES_DIR/lib/ignore.sh" && init_guidelines_guard
+[ -f "$(pwd)/scripts/rules/config.env" ] && source "$(pwd)/scripts/rules/config.env"
 
 CHECK_DEBUG="${CHECK_DEBUG_STATEMENTS:-true}"
 ERRORS=0
@@ -16,7 +18,12 @@ if git ls-files .env .env.local .env.production .env.staging *.pem *.key 2>/dev/
     ERRORS=$((ERRORS + 1))
 fi
 
-exposed_keys=$(grep -rnE "(BEGIN (RSA|EC|DSA|OPENSSH) PRIVATE KEY|BEGIN CERTIFICATE)" . 2>/dev/null | grep -vE "node_modules|vendor|\.git" || true)
+exposed_keys=""
+while IFS= read -r hit; do
+    [[ -z "$hit" ]] && continue
+    is_ignored "${hit%%:*}" && continue
+    exposed_keys+="$hit"$'\n'
+done < <(grep -rnE "(BEGIN (RSA|EC|DSA|OPENSSH) PRIVATE KEY|BEGIN CERTIFICATE)" . 2>/dev/null | grep -vE "node_modules|vendor|\.git" || true)
 if [ -n "$exposed_keys" ]; then
     echo -e "${RED}[FAIL]${NC} ISO 27001 A.8.12 Violation: Hardcoded private key detected in source code!"
     ERRORS=$((ERRORS + 1))
@@ -44,6 +51,7 @@ done
 if [ -d "app/Http/Requests" ]; then
     while IFS= read -r req_file; do
         [[ -z "$req_file" ]] && continue
+        is_ignored "$req_file" && continue
         if grep -qE "(['\"]file['\"]|['\"]image['\"]|->file\(|Rule::file\b|File::image\b|['\"][^'\"]*\|(file|image)\b)" "$req_file" 2>/dev/null; then
             if ! grep -qE "(mimes:|extensions:|mimetypes:|image\b|File::types)" "$req_file" 2>/dev/null; then
                 echo -e "${RED}[FAIL]${NC} ISO 27001 A.8.28 Violation: File upload missing MIME validation in $req_file"
@@ -53,11 +61,15 @@ if [ -d "app/Http/Requests" ]; then
     done < <(find app/Http/Requests -type f -name "*.php" 2>/dev/null || true)
 fi
 
-# Clause 5: ISO 25010 Maintainability - Clean Code (No leftover debug traces in production)
 if [ "$CHECK_DEBUG" = "true" ]; then
     for code_dir in app src lib; do
         [ ! -d "$code_dir" ] && continue
-        debug_calls=$(grep -rnE '\b(dd|dump|var_dump)\(' "$code_dir" 2>/dev/null | grep -vE "vendor|node_modules|tests" || true)
+        debug_calls=""
+        while IFS= read -r hit; do
+            [[ -z "$hit" ]] && continue
+            is_ignored "${hit%%:*}" && continue
+            debug_calls+="$hit"$'\n'
+        done < <(grep -rnE '\b(dd|dump|var_dump)\(' "$code_dir" 2>/dev/null | grep -vE "vendor|node_modules|tests" || true)
         if [ -n "$debug_calls" ]; then
             echo -e "${RED}[FAIL]${NC} ISO 25010 Maintainability Violation: Debug calls found in $code_dir/:"
             echo "$debug_calls" | head -n 2

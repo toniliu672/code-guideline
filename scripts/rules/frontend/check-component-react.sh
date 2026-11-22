@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+RULES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+[ -f "$RULES_DIR/lib/ignore.sh" ] && source "$RULES_DIR/lib/ignore.sh" && init_guidelines_guard
 ERRORS=0
 CHECKED=0
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; NC='\033[0m'
@@ -29,6 +31,7 @@ fi
 
 while IFS= read -r page; do
     [[ -z "$page" ]] && continue
+    is_ignored "$page" && continue
     CHECKED=$((CHECKED + 1))
     
     lines=$(wc -l < "$page")
@@ -38,7 +41,7 @@ while IFS= read -r page; do
             ERRORS=$((ERRORS + 1))
         fi
     fi
-done < <(find "${PAGE_DIRS[@]}" -type f -name "page.tsx" -o -name "page.jsx" -o -name "page.js" -o -name "*.tsx" 2>/dev/null | grep -vE "node_modules|\.next|build|dist" || true)
+done < <(find "${PAGE_DIRS[@]}" -type f \( -name "page.tsx" -o -name "page.jsx" -o -name "page.js" -o -name "*.tsx" \) 2>/dev/null || true)
 
 if [ "$ERRORS" -eq 0 ]; then
     echo -e "${GREEN}[OK]${NC} All $CHECKED React/Next.js pages comply with modular Component-Based architecture."

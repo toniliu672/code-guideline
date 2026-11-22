@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RULES_DIR="$SCRIPT_DIR/.."
 [ -f "$RULES_DIR/config.env" ] && source "$RULES_DIR/config.env"
+[ -f "$(pwd)/scripts/rules/config.env" ] && source "$(pwd)/scripts/rules/config.env"
 
 ARCHITECTURE_APPROACH="${ARCHITECTURE_APPROACH:-auto}"
 RED='\033[0;31m'; YELLOW='\033[0;33m'; NC='\033[0m'

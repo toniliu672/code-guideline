@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+RULES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+[ -f "$RULES_DIR/lib/ignore.sh" ] && source "$RULES_DIR/lib/ignore.sh" && init_guidelines_guard
 ERRORS=0
 CHECKED=0
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; NC='\033[0m'
@@ -20,6 +22,7 @@ fi
 
 while IFS= read -r ctrl; do
     [[ -z "$ctrl" ]] && continue
+    is_ignored "$ctrl" && continue
     CHECKED=$((CHECKED + 1))
     
     if grep -nE "DB::raw|DB::statement|SELECT \* FROM" "$ctrl" 2>/dev/null; then
@@ -36,6 +39,7 @@ done
 if [ ${#VIEW_DIRS[@]} -gt 0 ]; then
     while IFS= read -r view_file; do
         [[ -z "$view_file" ]] && continue
+        is_ignored "$view_file" && continue
         if grep -nE "(App\\\\Models\\\\[A-Za-z]+::(where|find|get|all|query|create|update|first|paginate|count|latest|select|orderBy)|Model::(where|find|get|all|query)|->query\(\)|DB::table)" "$view_file" 2>/dev/null; then
             echo -e "${RED}[FAIL]${NC} Direct database query detected inside View: $view_file"
             ERRORS=$((ERRORS + 1))

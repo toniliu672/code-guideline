@@ -3,6 +3,7 @@ set -euo pipefail
 
 RULES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 [ -f "$RULES_DIR/config.env" ] && source "$RULES_DIR/config.env"
+[ -f "$RULES_DIR/lib/ignore.sh" ] && source "$RULES_DIR/lib/ignore.sh" && init_guidelines_guard
 [ -f "$(pwd)/scripts/rules/config.env" ] && source "$(pwd)/scripts/rules/config.env"
 
 MAX_CHARS="${MAX_CLASS_CHARS:-100}"; MAX_WORDS="${MAX_CLASS_WORDS:-10}"
@@ -11,14 +12,14 @@ CHECK_CLASS_CONFLICTS="${CHECK_CLASS_CONFLICTS:-true}"; CHECK_CANONICAL="${CHECK
 ERRORS=0; RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; NC='\033[0m'
 
 echo "==> [FRONTEND-DESIGN] Enforcing Global Tokens, Clean Classes & Tailwind Lint..."
-EXCLUDE="vendor|node_modules|storage|\.git|\.next|\.svelte-kit|dist|build|\.test\.|\.spec\.|__tests__"; EXTS="tsx|jsx|js|svelte|blade\.php|vue|html"
+EXTS="tsx|jsx|js|svelte|blade\.php|vue|html"
 SHADES="50|100|200|300|400|500|600|700|800|900|950"; PREFIXES="bg|text|border|ring|fill|stroke|accent|from|to|via|divide|outline|decoration|placeholder"
 FAKE_TOKENS="tone|pri|indi|mystic|royal|ruby|mint|aqua|leaf|warmth|warm|neut|err|alert|notice|valid|magenta|soft|mono|ink"
 ALLOWED_CSS_TOKENS="background|foreground|surface(-(muted|elevated|alt))?|card(-foreground)?|popover(-foreground)?|primary(-(foreground|soft|hover))?|secondary(-(foreground|soft))?|muted(-foreground)?|accent(-(foreground|soft))?|(success|warning|danger|destructive|info)(-(foreground|soft))?|border(-(subtle|strong))?|input|ring"
 COLOR_REGEX="($PREFIXES)-\[(#|rgb|hsl)|($PREFIXES)-[a-zA-Z0-9_-]+-($SHADES)([[:space:]\"'\`}/]|$)|($PREFIXES)-($FAKE_TOKENS)(-[a-zA-Z0-9_-]+)?([[:space:]\"'\`}/]|$)|dark:($PREFIXES)-[a-zA-Z0-9_-]+|($PREFIXES)-(white|black)([[:space:]\"'\`}/]|$)|(text|fill|stroke)-(card|background|surface)([[:space:]\"'\`}/]|$)|bg-foreground([[:space:]\"'\`}/]|$)|style=[\"'][^\"']*(color|background(-color)?):[[:space:]]*(#|rgb|hsl)"
 
 while IFS= read -r f; do
-    [[ -z "$f" ]] && continue
+    [[ -z "$f" ]] && continue; is_ignored "$f" && continue
     if [ "$CHECK_COLORS" = "true" ]; then
         violating=$(grep -nE -- "$COLOR_REGEX" "$f" 2>/dev/null || true)
         if [ -n "$violating" ]; then
@@ -61,11 +62,11 @@ while IFS= read -r f; do
             ERRORS=$((ERRORS + 1))
         fi
     fi
-done < <(find . -type f 2>/dev/null | grep -E "\.($EXTS)$" | grep -vE "($EXCLUDE|tailwind\.config)" || true)
+done < <(find . -type f 2>/dev/null | grep -E "\.($EXTS)$" || true)
 
 if [ "$CHECK_COLORS" = "true" ]; then
     while IFS= read -r cf; do
-        [[ -z "$cf" ]] && continue
+        [[ -z "$cf" ]] && continue; is_ignored "$cf" && continue
         css_viol=$(grep -noE -- "--color-[a-zA-Z0-9_-]+[[:space:]]*:" "$cf" 2>/dev/null | grep -vE -- "--color-($ALLOWED_CSS_TOKENS)[[:space:]]*:" || true)
         [ -z "$css_viol" ] && css_viol=$(grep -nE -- "@apply [^;]*(($PREFIXES)-[a-zA-Z0-9_-]+-($SHADES)|dark:($PREFIXES)-|($PREFIXES)-(white|black|$FAKE_TOKENS)|(text|fill|stroke)-(card|background|surface))" "$cf" 2>/dev/null || true)
         if [ -n "$css_viol" ]; then
@@ -74,12 +75,12 @@ if [ "$CHECK_COLORS" = "true" ]; then
             echo -e "${YELLOW}[FIX]${NC}  In @theme, ONLY define canonical tokens (--color-background, --color-foreground, --color-surface, --color-card, --color-primary, --color-secondary, --color-muted, --color-accent, --color-success, --color-warning, --color-danger, --color-info, --color-border)."
             ERRORS=$((ERRORS + 1))
         fi
-    done < <(find . -type f 2>/dev/null | grep -E "\.css$" | grep -vE "($EXCLUDE)" || true)
+    done < <(find . -type f 2>/dev/null | grep -E "\.css$" || true)
 fi
 
 if [ "$CHECK_TRAIN_TRACK" = "true" ]; then
     while IFS= read -r page; do
-        [ ! -f "$page" ] && continue
+        [ ! -f "$page" ] && continue; is_ignored "$page" && continue
         track_violations=$(awk -v max_c="$MAX_CHARS" -v max_w="$MAX_WORDS" '
         match($0, /class(Name)?=["`{]+([^"`}]+)["`}]/, arr) {
             str = arr[2]; n = split(str, words, " ")
@@ -91,7 +92,7 @@ if [ "$CHECK_TRAIN_TRACK" = "true" ]; then
             echo -e "${YELLOW}[FIX]${NC}  Extract element into a reusable component (<x-...> / components/) or @layer components in app.css."
             ERRORS=$((ERRORS + 1))
         fi
-    done < <(find . -type f 2>/dev/null | grep -E "(app/.*/page\.(tsx|jsx|js)|pages/.*\.(tsx|jsx|js)|src/routes/.*\+page\.svelte|resources/views/.*\.blade\.php)" | grep -vE "resources/views/(components|layouts|layout)" | grep -vE "($EXCLUDE)" || true)
+    done < <(find . -type f 2>/dev/null | grep -E "(app/.*/page\.(tsx|jsx|js)|pages/.*\.(tsx|jsx|js)|src/routes/.*\+page\.svelte|resources/views/.*\.blade\.php)" | grep -vE "resources/views/(components|layouts|layout)" || true)
 fi
 
 [ "$ERRORS" -eq 0 ] && { echo -e "${GREEN}[OK]${NC} Design system & Tailwind styling validated 100%."; exit 0; }
