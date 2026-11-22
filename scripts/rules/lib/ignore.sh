@@ -26,7 +26,7 @@ import sys, re
 pats = []
 for raw in sys.argv[1].splitlines():
     line = raw.strip()
-    if not line or line.startswith('#'):
+    if not line or line.startswith('#') or line.startswith('!'):
         continue
     anchored = line.startswith('/')
     if anchored:
@@ -56,16 +56,20 @@ init_guidelines_guard() {
     check_guard_file ".guidelinesignore"
     GUIDELINES_IGNORE_REGEX=""
     if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        local env_data ignore_data count
+        local env_data git_ignore_data ignore_data combined count
         env_data=$(git show HEAD:.guidelines.env 2>/dev/null || true)
         if [ -n "$env_data" ]; then
             set -a
             eval "$env_data"
             set +a
         fi
+        git_ignore_data=$(git show HEAD:.gitignore 2>/dev/null || true)
         ignore_data=$(git show HEAD:.guidelinesignore 2>/dev/null || true)
+        combined=$(printf '%s\n%s\n' "$git_ignore_data" "$ignore_data")
+        if [ -n "${combined//[[:space:]]/}" ]; then
+            GUIDELINES_IGNORE_REGEX=$(compile_guidelines_ignore "$combined")
+        fi
         if [ -n "$ignore_data" ]; then
-            GUIDELINES_IGNORE_REGEX=$(compile_guidelines_ignore "$ignore_data")
             count=$(printf '%s\n' "$ignore_data" | grep -cvE '^[[:space:]]*(#|$)' || echo 0)
             [ "$count" -gt 0 ] && echo -e "\033[0;34m[IGNORE-AUDIT]\033[0m Active HEAD:.guidelinesignore ($count pattern(s))."
         fi

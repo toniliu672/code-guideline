@@ -145,21 +145,55 @@ guidelines --wizard
 ```
 
 ### Configuration File (`config.env` & Per-Project `.guidelines.env`)
-Global defaults are maintained in `scripts/rules/config.env`. For project-specific overrides, create a `.guidelines.env` file in the target project root and **commit it to Git**:
+Global defaults are maintained in `scripts/rules/config.env`. For project-specific overrides, copy the full template below into `.guidelines.env` at the root of your target project and **commit it to Git** (all variables are optional; unset values fall back to their defaults):
 
 ```bash
-# Strictness level: standard | moderate | strict
-STRICTNESS_LEVEL="standard"
+# ==============================================================================
+# PER-PROJECT GUIDELINES CONFIGURATION (.guidelines.env)
+# ==============================================================================
 
-# Frontend adapter (Laravel Blade is currently validated)
-FRONTEND_APPROACH="auto"
-BLADE_APPROACH="standard"
+# 1. Project & Core Rules
+PROJECT_NAME=""                         # Auto-detected from folder name if empty
+ENABLE_CORE=true                        # true | false
+MAX_LINES=100                           # Max lines for logic/controllers/components
+MAX_LAYOUT_LINES=250                    # Max lines for layout files
+STRICT_LINES=true                       # true (fail) | false (warning only)
+LINE_EXCLUDES="database/migrations|database/seeders|config/"
+CODE_DIRS="app src lib routes components pages"
 
-# System Architecture: auto | mvc | modular | service-layer | microservices | none
-ARCHITECTURE_APPROACH="auto"
+# 2. Syntax & Static Analysis
+LINTER_TOOL="auto"                      # auto | php-laravel | js-ts | svelte | flutter | syntax-only | none
+CHECK_SYNTAX=true                       # true | false (php -l)
+CHECK_STATIC_ANALYSIS=true              # true | false (PHPStan, Pint, ESLint, svelte-check, dart analyze)
 
-# Automated Test Suites (comma-separated: pest, phpunit, vitest, jest, k6, flutter)
-TEST_SUITES="pest"
+# 3. Frontend & Blade Rules
+FRONTEND_APPROACH="auto"                # auto | blade | react | next | svelte | flutter | none
+VIEWS_DIR="resources/views"             # Blade views root directory
+BLADE_APPROACH="auto"                   # auto | standard | admin-separated | atomic
+STRICTNESS_LEVEL="standard"             # standard | moderate | strict
+BLADE_RAW_TAGS=""                       # Optional regex override, e.g. "input|select|textarea|button"
+MAX_BLADE_PHP_LINES=3                   # Max lines allowed inside @php...@endphp in page views
+
+# 4. Design System & Tailwind Rules
+CHECK_COLOR_TOKENS=true                 # true | false (canonical color token allowlist)
+CHECK_TRAIN_TRACK=true                  # true | false (prevent bloated class strings in pages)
+CHECK_CLASS_CONFLICTS=true              # true | false (e.g. hidden + flex)
+CHECK_CANONICAL_CLASSES=true            # true | false (prefer p-4 over p-[16px])
+MAX_CLASS_CHARS=100                     # Max characters in a single class attribute on pages
+MAX_CLASS_WORDS=10                      # Max utility classes in a single class attribute on pages
+
+# 5. Architecture Rules
+ARCHITECTURE_APPROACH="auto"            # auto | mvc | service-layer | modular | microservices | none
+
+# 6. Automated Testing
+ENABLE_TESTING=false                    # true | false (include tests when running `guidelines` all)
+RUN_AUTOMATED_TESTS=true                # true | false (toggle runner for `guidelines test`)
+TEST_SUITES="laravel,k6"                # Comma-separated: laravel, pest, phpunit, frontend, vitest, jest, flutter, k6, none
+
+# 7. Security (ISO 27001 / 27701 / 25010) & CLI
+ENABLE_SECURITY=true                    # true | false
+CHECK_DEBUG_STATEMENTS=true             # true | false (block dd, dump, var_dump)
+USE_RTK="auto"                          # auto | yes | no
 ```
 
 ### Ignoring Files Per Project (`.guidelinesignore`)
@@ -173,6 +207,7 @@ resources/views/custom-pdf/**
 ```
 
 **Anti-Tamper Protection (`HEAD`-Only)**:
+- `guidelines` automatically respects committed **`HEAD:.gitignore`** patterns (so local gitignored secrets/keys like `*.key` or `certs/` do not trigger false positives, while tracked secrets are still blocked by ISO 27001).
 - `guidelines` reads `.guidelinesignore` and `.guidelines.env` **only from the latest Git commit (`HEAD`)**, never from uncommitted working tree edits.
 - If an AI agent modifies or creates either file without a human commit, `guidelines` prints a `[WARNING]` with the diff and **ignores the uncommitted changes**.
 
