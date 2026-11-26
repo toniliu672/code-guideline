@@ -28,11 +28,10 @@ for arg in "$@"; do
             echo -e "   Strictness Level      : \033[0;32m$STRICTNESS_LEVEL\033[0m"
             echo -e "   Architecture Paradigm : \033[0;32m$ARCHITECTURE_APPROACH\033[0m"
             echo -e "   Linter & Analysis     : \033[0;32m${LINTER_TOOL:-auto}\033[0m"
-            echo -e "   Testing Suites        : \033[0;32m${TEST_SUITES:-none}\033[0m"
+            echo -e "   Testing Suites        : \033[0;32m${TEST_SUITES:-none}\033[0m | Runtime Guard: \033[0;32m${ENABLE_RUNTIME_GUARD:-false}\033[0m"
             echo -e "   RTK Integration       : \033[0;32m${USE_RTK:-auto}\033[0m"
             echo -e "   Core Limits           : Max ${MAX_LINES:-100} lines (Layouts: ${MAX_LAYOUT_LINES:-250})"
-            echo -e "\033[0;34m================================================================\033[0m" && exit 0
-            ;;
+            echo -e "\033[0;34m================================================================\033[0m" && exit 0 ;;
         --setup|--wizard|--update|--global|--skills|--clean=*|--uninstall*) exec bash "$SCRIPT_DIR/install.sh" "$@" ;;
         --frontend=*) FRONTEND_APPROACH="${arg#*=}" ;;
         --blade=*) BLADE_APPROACH="${arg#*=}" ;;
@@ -68,11 +67,11 @@ case "$TARGET" in
     core) for s in comments lines syntax-lint; do run_step "$s" "$RULES_DIR/core/check-$s.sh"; done ;;
     lint|syntax) run_step "Syntax & Lint" "$RULES_DIR/core/check-syntax-lint.sh" ;;
     test|tests|testing) run_step "Automated Tests" "$RULES_DIR/testing/check-testing.sh" ;;
+    runtime|crawl) run_step "Runtime Guard" "$RULES_DIR/runtime/check-runtime.sh" ;;
     frontend|ui)
         export FRONTEND_APPROACH BLADE_APPROACH
         run_step "Frontend" "$RULES_DIR/frontend/check-component-based.sh"
-        run_step "Design System" "$RULES_DIR/frontend/check-design-system.sh"
-        ;;
+        run_step "Design System" "$RULES_DIR/frontend/check-design-system.sh" ;;
     design|colors|styling) run_step "Design System" "$RULES_DIR/frontend/check-design-system.sh" ;;
     arch|architecture) export ARCHITECTURE_APPROACH; run_step "Architecture" "$RULES_DIR/architecture/check-architecture.sh" ;;
     security|iso) run_step "ISO Compliance" "$RULES_DIR/security/check-iso-compliance.sh" ;;
@@ -82,11 +81,10 @@ case "$TARGET" in
         [ "$ARCHITECTURE_APPROACH" != "none" ] && { export ARCHITECTURE_APPROACH; run_step "Architecture" "$RULES_DIR/architecture/check-architecture.sh"; }
         [ "$ENABLE_SECURITY" = "true" ] && run_step "ISO Compliance" "$RULES_DIR/security/check-iso-compliance.sh"
         [ "${ENABLE_TESTING:-false}" = "true" ] && run_step "Automated Tests" "$RULES_DIR/testing/check-testing.sh"
-        ;;
+        [ "${ENABLE_RUNTIME_GUARD:-false}" = "true" ] && run_step "Runtime Guard" "$RULES_DIR/runtime/check-runtime.sh" ;;
     *)
-        echo -e "${RED}[ERROR]${NC} Unknown module: $TARGET (all | core | lint | test | frontend | design | arch | iso)"
-        exit 1
-        ;;
+        echo -e "${RED}[ERROR]${NC} Unknown module: $TARGET (all | core | lint | test | runtime | frontend | design | arch | iso)"
+        exit 1 ;;
 esac
 
 echo -e "${BLUE}================================================================${NC}"

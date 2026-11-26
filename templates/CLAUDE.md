@@ -9,6 +9,10 @@ rtk bash guidelines.sh
 # or:
 bash guidelines.sh
 ```
+When modifying routes, APIs, permissions, or UI pages with a local/test server available, also verify zero HTTP 5xx, JS `pageerror`, and `console.error` via:
+```bash
+guidelines runtime --url=http://127.0.0.1:8000
+```
 All checks must pass 100% before concluding your turn.
 
 ## 2. Universal Core Rules

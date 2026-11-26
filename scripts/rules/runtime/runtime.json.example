@@ -1,0 +1,25 @@
+{
+  "baseUrl": "http://127.0.0.1:8000",
+  "autoDiscover": true,
+  "maxPages": 50,
+  "timeoutMs": 15000,
+  "ignoreUrls": ["/api/auth/me"],
+  "roles": [
+    {
+      "name": "guest",
+      "routes": ["/", "/login"]
+    },
+    {
+      "name": "admin",
+      "login": {
+        "url": "/login",
+        "emailSelector": "input[name='email']",
+        "passwordSelector": "input[name='password']",
+        "submitSelector": "button[type='submit']",
+        "email": "${E2E_ADMIN_EMAIL}",
+        "password": "${E2E_ADMIN_PASSWORD}"
+      },
+      "routes": ["/dashboard"]
+    }
+  ]
+}

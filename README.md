@@ -87,6 +87,7 @@ The global executable is located at `/usr/local/bin/guidelines`.
 | `guidelines core` | Runs core audits only (Zero inline comments, file line limits, syntax/lint) |
 | `guidelines lint` | Runs static analysis and syntax validation |
 | `guidelines test` | Executes configured automated test suites |
+| `guidelines runtime` | Crawls live routes across roles (Chromium/Playwright or HTTP fallback) to block HTTP 5xx, JS `pageerror`, `console.error`, and server log exceptions |
 | `guidelines frontend` | Validates frontend component structure and design system rules |
 | `guidelines design` | Validates color tokens and class string length limits |
 | `guidelines arch` | Validates architectural pattern boundaries |
@@ -194,6 +195,17 @@ TEST_SUITES="laravel,k6"                # Comma-separated: laravel, pest, phpuni
 ENABLE_SECURITY=true                    # true | false
 CHECK_DEBUG_STATEMENTS=true             # true | false (block dd, dump, var_dump)
 USE_RTK="auto"                          # auto | yes | no
+
+# 8. Universal Runtime & Browser Error Guard (`guidelines runtime` / `guidelines crawl`)
+ENABLE_RUNTIME_GUARD=false              # true | false (include runtime crawl in `guidelines` all)
+RUNTIME_BASE_URL=""                     # Target dev/test server URL (e.g. http://127.0.0.1:8000)
+RUNTIME_CONFIG=".guidelines.runtime.json" # Multi-role login & seed routes config (see scripts/rules/runtime/runtime.json.example)
+RUNTIME_ROUTES="/"                      # Comma-separated fallback routes when RUNTIME_CONFIG is absent
+RUNTIME_FAIL_ON_4XX=false               # true to fail on unexpected 403/404/422 during page load
+RUNTIME_FAIL_ON_CONSOLE_ERROR=true      # true to fail on browser console.error
+RUNTIME_LOG_FILE=""                     # Optional server log file to scan for newly appended exceptions
+RUNTIME_MAX_PAGES=50                    # Max auto-discovered pages crawled per role
+RUNTIME_TIMEOUT_MS=15000                # Navigation timeout in milliseconds
 ```
 
 ### Ignoring Files Per Project (`.guidelinesignore`)
