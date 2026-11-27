@@ -15,15 +15,26 @@ RUNTIME_ROUTES="${RUNTIME_ROUTES:-/}"
 RUNTIME_LOG_FILE="${RUNTIME_LOG_FILE:-}"
 RUNTIME_MAX_PAGES="${RUNTIME_MAX_PAGES:-50}"
 RUNTIME_TIMEOUT_MS="${RUNTIME_TIMEOUT_MS:-15000}"
+CLICK_TABS="${RUNTIME_CLICK_TABS:-true}"
+CHECK_CONTRAST="${RUNTIME_CHECK_CONTRAST:-false}"
+CHECK_DARK_MODE="${RUNTIME_CHECK_DARK_MODE:-false}"
 
 for arg in "$@"; do
     case "$arg" in
+        -h|--help)
+            printf 'Usage: guidelines runtime [--url=URL] [--config=FILE] [--routes=/a,/b] [--log=FILE] [--fail-on-4xx] [--check-contrast] [--dark] [--no-tabs] [--full]\n'
+            printf 'Multi-role config (.guidelines.runtime.json): { baseUrl, autoDiscover, maxPages, roles: [{ name, login?: { url|apiUrl, emailSelector, passwordSelector, submitSelector, email, password }, routes, steps? }] }\n'
+            exit 0 ;;
         --url=*) BASE_URL="${arg#*=}" ;;
         --config=*) RUNTIME_CONFIG="${arg#*=}" ;;
         --routes=*) RUNTIME_ROUTES="${arg#*=}" ;;
         --log=*) RUNTIME_LOG_FILE="${arg#*=}" ;;
         --fail-on-4xx) FAIL_ON_4XX="true" ;;
         --no-console-fail) FAIL_ON_CONSOLE="false" ;;
+        --no-tabs) CLICK_TABS="false" ;;
+        --check-contrast) CHECK_CONTRAST="true" ;;
+        --dark|--check-dark-mode) CHECK_DARK_MODE="true" ;;
+        --full|--all) FAIL_ON_4XX="true"; FAIL_ON_CONSOLE="true"; CLICK_TABS="true"; CHECK_CONTRAST="true"; CHECK_DARK_MODE="true" ;;
     esac
 done
 
@@ -53,6 +64,7 @@ fi
 export RUNTIME_BASE_URL="$BASE_URL"
 export RUNTIME_CONFIG RUNTIME_FAIL_ON_4XX="$FAIL_ON_4XX" RUNTIME_FAIL_ON_CONSOLE_ERROR="$FAIL_ON_CONSOLE"
 export RUNTIME_ROUTES RUNTIME_MAX_PAGES RUNTIME_TIMEOUT_MS
+export RUNTIME_CLICK_TABS="$CLICK_TABS" RUNTIME_CHECK_CONTRAST="$CHECK_CONTRAST" RUNTIME_CHECK_DARK_MODE="$CHECK_DARK_MODE"
 
 HAS_PLAYWRIGHT="false"
 if command -v node >/dev/null 2>&1; then

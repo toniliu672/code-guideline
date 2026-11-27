@@ -9,9 +9,13 @@ rtk bash guidelines.sh
 # or:
 bash guidelines.sh
 ```
-When modifying routes, APIs, permissions, or UI pages with a local/test server available, also verify zero HTTP 5xx, JS `pageerror`, and `console.error` via:
+When modifying routes, APIs, permissions, or UI pages with a local/test server available, also verify zero HTTP 5xx, JS `pageerror`, `console.error`, and `AUTH_BOUNCE` via:
 ```bash
-guidelines runtime --url=http://127.0.0.1:8000
+guidelines runtime --url=http://127.0.0.1:8000 --fail-on-4xx --log=storage/logs/laravel.log
+# Full check (+ WCAG 2.1 contrast in light & dark mode + auto-click tabs):
+guidelines runtime --url=http://127.0.0.1:8000 --full
+# Multi-role (auto-loads .guidelines.runtime.json when present; see `guidelines runtime --help`):
+E2E_ADMIN_EMAIL=... E2E_ADMIN_PASSWORD=... guidelines runtime --fail-on-4xx
 ```
 All checks must pass 100% before concluding your turn.
 

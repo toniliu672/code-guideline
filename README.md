@@ -203,6 +203,9 @@ RUNTIME_CONFIG=".guidelines.runtime.json" # Multi-role login & seed routes confi
 RUNTIME_ROUTES="/"                      # Comma-separated fallback routes when RUNTIME_CONFIG is absent
 RUNTIME_FAIL_ON_4XX=false               # true to fail on unexpected 403/404/422 during page load
 RUNTIME_FAIL_ON_CONSOLE_ERROR=true      # true to fail on browser console.error
+RUNTIME_CLICK_TABS=true                 # true to auto-click visible [role="tab"] elements
+RUNTIME_CHECK_CONTRAST=false            # true (or --check-contrast / --full) to enforce WCAG 2.1 color contrast
+RUNTIME_CHECK_DARK_MODE=false           # true (or --dark / --full) to also audit dark mode contrast & errors
 RUNTIME_LOG_FILE=""                     # Optional server log file to scan for newly appended exceptions
 RUNTIME_MAX_PAGES=50                    # Max auto-discovered pages crawled per role
 RUNTIME_TIMEOUT_MS=15000                # Navigation timeout in milliseconds

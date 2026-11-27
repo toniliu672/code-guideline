@@ -5,9 +5,7 @@ const require = createRequire(import.meta.url);
 
 export function loadPlaywright() {
   for (const base of [process.cwd(), ...((process.env.NODE_PATH || '').split(':').filter(Boolean))]) {
-    try {
-      return require(require.resolve('playwright', { paths: [base] }));
-    } catch {}
+    try { return require(require.resolve('playwright', { paths: [base] })); } catch {}
   }
   return require('playwright');
 }
@@ -39,13 +37,7 @@ export function resolveEnv(value) {
 }
 
 export function isIgnoredUrl(url, ignorePatterns) {
-  return (ignorePatterns || []).some((p) => {
-    try {
-      return new RegExp(p).test(url);
-    } catch {
-      return url.includes(p);
-    }
-  });
+  return (ignorePatterns || []).some((p) => { try { return new RegExp(p).test(url); } catch { return url.includes(p); } });
 }
 
 export async function performLogin(page, baseUrl, login, timeoutMs) {
@@ -74,10 +66,16 @@ export async function performLogin(page, baseUrl, login, timeoutMs) {
   }
   if (login.submitSelector) {
     await Promise.all([
-      page.waitForLoadState('networkidle', { timeout: timeoutMs }).catch(() => {}),
+      page.waitForNavigation({ timeout: timeoutMs }).catch(() => page.waitForLoadState('networkidle', { timeout: timeoutMs }).catch(() => {})),
       page.click(login.submitSelector),
     ]);
   }
+  const loginPath = new URL(loginUrl, baseUrl).pathname;
+  const landedPath = new URL(page.url()).pathname;
+  if (landedPath === loginPath) {
+    throw new Error(`Still on ${loginPath} after login submit (check credentials or submitSelector)`);
+  }
+  return landedPath;
 }
 
 export async function discoverLinks(page, baseUrl) {
